@@ -162,9 +162,9 @@ public class MatchmakerTest {
 		}
 	}
 
-	/** Test player load capacity */
+	/** Test player load capacity 1v1 */
 	@Test
-	public void testPlayerLoadCapacity() {
+	public void testPlayerCapacity() {
 		Matchmaker matchmaker;
 		try {
 			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
@@ -224,6 +224,39 @@ public class MatchmakerTest {
 			match = matchmaker.findMatch(1);
 			assertNull(match);
 			
+		} catch (PlayerFormatException e){
+			fail("No exceptions allowed! >_<" + e);
+		}
+	}
+	
+	/** Stress test */
+	@Test
+	public void testStress() {
+		Matchmaker matchmaker;
+		try {
+			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		} catch (Exception e) {
+			fail("Can't instantiate Matchmaker: " + e.getMessage());
+			return;
+		}
+
+		try{
+			String commonPlayerName = "Apocalypse";
+
+			// Fully load matchmaker 
+			for(int i=0; i<Matchmaker.MAX_PLAYERS; ++i)
+				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1));
+			
+			// Empty matchmaker finding matches
+			for(int i=0; i<Matchmaker.MAX_PLAYERS/(2*Matchmaker.MAX_PLAYERS_PER_TEAM); ++i){
+				Match match = matchmaker.findMatch(Matchmaker.MAX_PLAYERS_PER_TEAM);
+				assertNotNull("Error in iteration "+i, match);
+			}
+
+			// No more matches can be found
+			Match match = matchmaker.findMatch(1);
+			assertNull(match);
+		
 		} catch (PlayerFormatException e){
 			fail("No exceptions allowed! >_<" + e);
 		}
