@@ -1,17 +1,17 @@
-package com.riotgames.interview.hongkong.matchmaking;
+package com.riotgames.interview.hongkong.matchmaking.matchmaker;
 
-import java.io.FileInputStream;
 import java.util.PriorityQueue;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.riotgames.interview.hongkong.matchmaking.matcher.MatchingAlgorithm;
+import com.riotgames.interview.hongkong.matchmaking.Match;
+import com.riotgames.interview.hongkong.matchmaking.PlayerComponentPair;
+import com.riotgames.interview.hongkong.matchmaking.matcher.Matcher;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerBase;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerTeam;
-import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculatorAlgorithm;
+import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
 /**
  * The matchmaking implementation that you will write.
@@ -21,22 +21,19 @@ import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculatorAlgorit
  */
 public class MatchmakerImpl implements Matchmaker {
 	/** Path to the Matchmaker's configuration file */
-	private static final String MATCHMAKER_CONFIG_FILE = "src/main/resources/matchmaker.properties";
+	//private static final String MATCHMAKER_CONFIG_FILE = "src/main/resources/matchmaker.properties";
 
-	/** Maximum players per team */
-	public static final int MAX_PLAYERS_PER_TEAM = 10; // Double Pentakill mode!
-	
 	/** Configuration properties */
-	private Properties properties;
+	//private Properties properties;
 
 	/** Current player base */
 	private PlayerBase playerBase;
 
 	/** Player matching algorithm */
-	private MatchingAlgorithm<PlayerComponent> matcher;
+	private Matcher<PlayerComponent> matcher;
 
 	/** Player skill calculator algorithm */
-	private SkillCalculatorAlgorithm<PlayerComponent> skillCalc;
+	private SkillCalculator<PlayerComponent> skillCalculator;
 
 	/** Cached similarities between player pairs */ 
 	private PriorityQueue<PlayerComponentPair> similarities;
@@ -44,31 +41,17 @@ public class MatchmakerImpl implements Matchmaker {
 	/** Logger for printing stuff */
 	private static Logger logger = Logger.getLogger(MatchmakerImpl.class.toString());
 	
-	@SuppressWarnings("unchecked") // Reflection warnings are ugly :|
-	public MatchmakerImpl() throws ConfigurationFailException {
-		// Try to configure our matchmaker or epic fail
-		try{
-			playerBase = new PlayerBase();
-			
-			similarities = new PriorityQueue<PlayerComponentPair>();
-			
-			/** Read properties file */		
-			properties = new Properties();
-			properties.load(new FileInputStream(MATCHMAKER_CONFIG_FILE));
-			
-			// TODO Find a cleaner way to initialize all this stuff which is far from beautiful and not really flexible :/
-			skillCalc = (SkillCalculatorAlgorithm<PlayerComponent>) 
-					Class.forName(properties.getProperty("skill.calculator.class")).newInstance();
-
-			matcher = (MatchingAlgorithm<PlayerComponent>) 
-					Class.forName(properties.getProperty("matching.algorithm.class")).
-					getConstructor(SkillCalculatorAlgorithm.class).
-					newInstance(skillCalc);
-		}
+	public MatchmakerImpl(SkillCalculator<PlayerComponent> skillCalculator, Matcher<PlayerComponent> matcher) {
+		playerBase = new PlayerBase();
 		
-		catch(Exception e){
-			throw new ConfigurationFailException(e);
-		}
+		similarities = new PriorityQueue<PlayerComponentPair>();
+		
+		/** Read properties file */		
+		//properties = new Properties();
+		//properties.load(new FileInputStream(MATCHMAKER_CONFIG_FILE));
+		
+		this.matcher = matcher;
+		this.skillCalculator = skillCalculator;
 	}
 
 	public synchronized Match findMatch(int playersPerTeam) {
@@ -111,7 +94,7 @@ public class MatchmakerImpl implements Matchmaker {
 				// Determine which team has the highest and lowest skill
 				PlayerTeam highestTeam;
 				PlayerTeam lowesTeam;
-				if(skillCalc.getSkill(team1) > skillCalc.getSkill(team2)){
+				if(skillCalculator.getSkill(team1) > skillCalculator.getSkill(team2)){
 					highestTeam = team1;
 					lowesTeam = team2;
 				}
@@ -123,7 +106,7 @@ public class MatchmakerImpl implements Matchmaker {
 				// And do the same for players
 				PlayerComponent highestPlayer;
 				PlayerComponent lowestPlayer;
-				if(skillCalc.getSkill(bestMatch.getOne()) > skillCalc.getSkill(bestMatch.getAnother())){
+				if(skillCalculator.getSkill(bestMatch.getOne()) > skillCalculator.getSkill(bestMatch.getAnother())){
 					highestPlayer = bestMatch.getOne();
 					lowestPlayer = bestMatch.getAnother();
 				}
@@ -155,6 +138,11 @@ public class MatchmakerImpl implements Matchmaker {
 	public synchronized void enterMatchmaking(Player newPlayer) {
 		if(newPlayer==null){
 			logger.warning("Can't add a null player");
+			return;
+		}
+		
+		if(playerBase.size() >= MAX_PLAYERS){
+			logger.warning("Can't add more players at the moment");
 			return;
 		}
 		

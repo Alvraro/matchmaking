@@ -11,19 +11,20 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.DefaultMatchmakerFactory;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.Matchmaker;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 
-public class MatchmakerImplTest {
-
+public class MatchmakerTest {
 
 	/** Matches can't be found without players */ 
 	@Test
 	public void testFindMatchWithoutPlayers() {
-		MatchmakerImpl matchmaker;
+		Matchmaker matchmaker;
 		try {
-			matchmaker = new MatchmakerImpl();
-		} catch (ConfigurationFailException e) {
-			fail("Can't instantiate MatchmakerImpl: " + e.getMessage());
+			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		} catch (Exception e) {
+			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
 		}
 
@@ -31,8 +32,8 @@ public class MatchmakerImplTest {
 		assertNull(matchmaker.findMatch(3));
 		assertNull(matchmaker.findMatch(5));
 		assertNull(matchmaker.findMatch(100));
-		assertNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM));
-		assertNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM+1));
+		assertNull(matchmaker.findMatch(Matchmaker.MAX_PLAYERS_PER_TEAM));
+		assertNull(matchmaker.findMatch(Matchmaker.MAX_PLAYERS_PER_TEAM+1));
 		assertNull(matchmaker.findMatch(0));
 		assertNull(matchmaker.findMatch(-1));
 		assertNull(matchmaker.findMatch(-100));
@@ -41,11 +42,11 @@ public class MatchmakerImplTest {
 	/** Matches can't be found for bad cases even with players */ 
 	@Test
 	public void testFindMatchBadCasesWithPlayers() {
-		MatchmakerImpl matchmaker;
+		Matchmaker matchmaker;
 		try {
-			matchmaker = new MatchmakerImpl();
-		} catch (ConfigurationFailException e) {
-			fail("Can't instantiate MatchmakerImpl: " + e.getMessage());
+			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		} catch (Exception e) {
+			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
 		}
 
@@ -54,23 +55,23 @@ public class MatchmakerImplTest {
 			matchmaker.enterMatchmaking(player);
 		
 		// Bad cases
-		assertNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM+1));
+		assertNull(matchmaker.findMatch(Matchmaker.MAX_PLAYERS_PER_TEAM+1));
 		assertNull(matchmaker.findMatch(0));
 		assertNull(matchmaker.findMatch(-1));
 		assertNull(matchmaker.findMatch(-100));
 		
 		// Valid edge case
-		assertNotNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM));
+		assertNotNull(matchmaker.findMatch(Matchmaker.MAX_PLAYERS_PER_TEAM));
 	}
 
 	/** Test player creation errors */
 	@Test
 	public void testEnterMatchmakingBadPlayers() {
-		MatchmakerImpl matchmaker;
+		Matchmaker matchmaker;
 		try {
-			matchmaker = new MatchmakerImpl();
-		} catch (ConfigurationFailException e) {
-			fail("Can't instantiate MatchmakerImpl: " + e.getMessage());
+			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		} catch (Exception e) {
+			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
 		}
 
@@ -141,11 +142,11 @@ public class MatchmakerImplTest {
 	/** Test player creation at edge cases */
 	@Test
 	public void testEnterMatchmakingEdgePlayers() {
-		MatchmakerImpl matchmaker;
+		Matchmaker matchmaker;
 		try {
-			matchmaker = new MatchmakerImpl();
-		} catch (ConfigurationFailException e) {
-			fail("Can't instantiate MatchmakerImpl: " + e.getMessage());
+			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		} catch (Exception e) {
+			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
 		}
 
@@ -160,13 +161,80 @@ public class MatchmakerImplTest {
 			fail("No exceptions allowed! >_<" + e);
 		}
 	}
+
+	/** Test player load capacity */
+	@Test
+	public void testPlayerLoadCapacity() {
+		Matchmaker matchmaker;
+		try {
+			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		} catch (Exception e) {
+			fail("Can't instantiate Matchmaker: " + e.getMessage());
+			return;
+		}
+
+		try{
+			String commonPlayerName = "Apocalypse";
+			String anotherPlayerName = "Seagull";
+			String yetAnotherPlayerName = "Beer";
+			
+			// Fully load matchmaker with 'commonPlayerName' players 
+			for(int i=0; i<Matchmaker.MAX_PLAYERS; ++i)
+				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1));
+			
+			// Add one more player with a different name
+			matchmaker.enterMatchmaking(new Player(anotherPlayerName, 0, 1));
+			
+			// Matchmaker should have silently ignored this player!
+			
+			// Empty matchmaker finding 1v1 matches
+			for(int i=0; i<Matchmaker.MAX_PLAYERS/2; ++i){
+				Match match = matchmaker.findMatch(1);
+				assertNotNull(match);
+								
+				assertTrue(match.getTeam1().iterator().next().getName().equals(commonPlayerName));
+				assertTrue(match.getTeam2().iterator().next().getName().equals(commonPlayerName));
+			}
+
+			// No more matches can be found
+			Match match = matchmaker.findMatch(1);
+			assertNull(match);
+						
+			// If the name was odd, we need one more player and match (WHO set that MAX constant to an odd number? ¬_¬) to empty the matchmaker
+			int maxPlayers = Matchmaker.MAX_PLAYERS;
+			if((maxPlayers % 2) != 0){
+				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1));
+				match = matchmaker.findMatch(1);
+				assertNotNull(match);
+				assertTrue(match.getTeam1().iterator().next().getName().equals(commonPlayerName));
+				assertTrue(match.getTeam2().iterator().next().getName().equals(commonPlayerName));
+			}
+			
+			// Add two more players with a different name
+			matchmaker.enterMatchmaking(new Player(yetAnotherPlayerName, 0, 1));
+			matchmaker.enterMatchmaking(new Player(yetAnotherPlayerName, 0, 1));
+			
+			// Find and check match
+			match = matchmaker.findMatch(1);
+			assertNotNull(match);
+			assertTrue(match.getTeam1().iterator().next().getName().equals(yetAnotherPlayerName));
+			assertTrue(match.getTeam2().iterator().next().getName().equals(yetAnotherPlayerName));
+			
+			// No more matches can be found
+			match = matchmaker.findMatch(1);
+			assertNull(match);
+			
+		} catch (PlayerFormatException e){
+			fail("No exceptions allowed! >_<" + e);
+		}
+	}
 	
 	/** Test basic 1v1 FindMatch WITHOUT concurrency. If I can't do this I'm a loser */
 	@Test
 	public void testFindMatch1v1NotConcurrent() {
 		try{
 			// Create matchmaker
-			MatchmakerImpl matchmaker = new MatchmakerImpl();
+			Matchmaker matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
 			// Create 2 basic players
 			Player p1 = new Player("p1", 100, 100);
 			Player p2 = new Player("p2", 100, 100);
@@ -208,9 +276,9 @@ public class MatchmakerImplTest {
 	public void testFindPerfectMatchNotConcurrent() {
 		try{
 			// Create matchmaker
-			MatchmakerImpl matchmaker = new MatchmakerImpl();
+			Matchmaker matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
 		
-			for(int n=1; n<=MatchmakerImpl.MAX_PLAYERS_PER_TEAM; ++n)
+			for(int n=1; n<=Matchmaker.MAX_PLAYERS_PER_TEAM; ++n)
 				testFindPerfectMatchNvNNotConcurrent(matchmaker, n);
 			
 		} catch(Exception e){
@@ -223,7 +291,7 @@ public class MatchmakerImplTest {
 	 * Test a basic NvN FindMatch WITHOUT concurrency and a perfect match. 
 	 * N random players are created and cloned in name, skill, etc. so teams have to be identical 
 	 * */
-	public void testFindPerfectMatchNvNNotConcurrent(MatchmakerImpl matchmaker, int n) {
+	public void testFindPerfectMatchNvNNotConcurrent(Matchmaker matchmaker, int n) {
 		try{
 			// Create a list of N players and another one with N copied players 
 			ArrayList<Player> players = new ArrayList<Player>(n);

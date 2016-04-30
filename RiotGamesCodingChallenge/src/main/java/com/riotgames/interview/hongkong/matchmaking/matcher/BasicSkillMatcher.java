@@ -1,17 +1,17 @@
 package com.riotgames.interview.hongkong.matchmaking.matcher;
 
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
-import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculatorAlgorithm;
+import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
 /** 
  * Basic implementation of a matcher that only takes skill into consideration
  * */
-public class BasicSkillMatcher implements MatchingAlgorithm<PlayerComponent> {
+public class BasicSkillMatcher implements Matcher<PlayerComponent> {
 
 	/** Skill calculator object */
-	private SkillCalculatorAlgorithm<PlayerComponent> skillCalculator;
+	private SkillCalculator<PlayerComponent> skillCalculator;
 
-	public BasicSkillMatcher(SkillCalculatorAlgorithm<PlayerComponent> skillCalculator) {
+	public BasicSkillMatcher(SkillCalculator<PlayerComponent> skillCalculator) {
 		this.skillCalculator = skillCalculator;
 	}
 	

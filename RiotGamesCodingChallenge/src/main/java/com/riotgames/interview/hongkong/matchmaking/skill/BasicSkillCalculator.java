@@ -5,7 +5,7 @@ import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
 /** 
  * Basic implementation of a skill calculator that calculates skill by dividing numbers of wins by the total number of games  
  * */
-public class BasicSkillCalculator implements SkillCalculatorAlgorithm<PlayerComponent>{
+public class BasicSkillCalculator implements SkillCalculator<PlayerComponent>{
 
 	@Override
 	public double getSkill(PlayerComponent one) {

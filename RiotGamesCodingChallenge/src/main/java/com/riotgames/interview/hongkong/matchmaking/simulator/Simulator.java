@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Random;
 
 import com.riotgames.interview.hongkong.matchmaking.Match;
-import com.riotgames.interview.hongkong.matchmaking.MatchmakerImpl;
 import com.riotgames.interview.hongkong.matchmaking.PlayerFormatException;
 import com.riotgames.interview.hongkong.matchmaking.SampleData;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.DefaultMatchmakerFactory;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.Matchmaker;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 import com.riotgames.interview.hongkong.matchmaking.stats.StatsExtractor;
 
@@ -24,7 +25,7 @@ public class Simulator {
 	private static final int NUM_MATCHES = 10;
 
 	/** Matchmaker to simulate */
-	private MatchmakerImpl matchmaker;
+	private Matchmaker matchmaker;
 	
 	/** Fixed size of the teams generated */
 	private int playersPerTeam;
@@ -32,7 +33,7 @@ public class Simulator {
 	/** We simulate a constant base size of players as the solution is not expected to be perfect at first */
 	private int playerBaseSize;
 	
-	public Simulator(MatchmakerImpl matchmaker, int playersPerTeam, int playerBaseSize) {
+	public Simulator(Matchmaker matchmaker, int playersPerTeam, int playerBaseSize) {
 		this.matchmaker = matchmaker;
 		this.playersPerTeam = playersPerTeam;
 		this.playerBaseSize = playerBaseSize;
@@ -43,7 +44,7 @@ public class Simulator {
 		Random random = new Random(new Date().getTime());
 
 		// Create matchmaker
-		MatchmakerImpl matchmaker = new MatchmakerImpl();
+		Matchmaker matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
 
 		// Create simulator
 		Simulator simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
