@@ -2,9 +2,15 @@ package com.riotgames.interview.hongkong.matchmaking;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.riotgames.interview.hongkong.matchmaking.matcher.MatchingAlgorithm;
+import com.riotgames.interview.hongkong.matchmaking.player.Player;
+import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
+import com.riotgames.interview.hongkong.matchmaking.player.PlayerComposite;
 import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculatorAlgorithm;
 
 /**
@@ -18,30 +24,42 @@ public class MatchmakerImpl implements Matchmaker {
 	private Properties properties;
 
 	/** Players blaming on us to start the f#%&! match :p */ 
-	private ArrayList<Player> players;
+	private ArrayList<PlayerComponent> players;
 
 	/** Player matching algorithm */
-	private MatchingAlgorithm<Player> matcher;
+	private MatchingAlgorithm<PlayerComponent> matcher;
 
 	/** Player skill calculator algorithm */
-	private SkillCalculatorAlgorithm<Player> skillCalc;
+	private SkillCalculatorAlgorithm<PlayerComponent> skillCalc;
 
+	/** Cached similarities between player pairs */ 
+	private PriorityQueue<PlayerComponentPair> similarities;
+	
+	/** Logger for printing stuff */
+	private Logger logger = Logger.getGlobal();
+	
 	//PriorityQueue<>
 
 	@SuppressWarnings("unchecked")
 	public MatchmakerImpl() throws ConfigurationFailException {
 		// Try to configure our matchmaker or epic fail
 		try{
+			players = new ArrayList<PlayerComponent>();
+			
+			similarities = new PriorityQueue<PlayerComponentPair>();
+			
 			/** Read properties file */		
 			properties = new Properties();
 			properties.load(new FileInputStream(MATCHMAKER_CONFIG_FILE));
 			
-			// TODO Find a cleaner way to initialize stuff
-			matcher = (MatchingAlgorithm<Player>) 
-					Class.forName(properties.getProperty("matching.algorithm.class")).newInstance();
-			
-			skillCalc = (SkillCalculatorAlgorithm<Player>) 
+			// TODO Find a cleaner way to initialize all this stuff which is far from beautiful and not really flexible :/
+			skillCalc = (SkillCalculatorAlgorithm<PlayerComponent>) 
 					Class.forName(properties.getProperty("skill.calculator.class")).newInstance();
+
+			matcher = (MatchingAlgorithm<PlayerComponent>) 
+					Class.forName(properties.getProperty("matching.algorithm.class")).
+					getConstructor(SkillCalculatorAlgorithm.class).
+					newInstance(skillCalc);
 		}
 		
 		catch(Exception e){
@@ -50,23 +68,61 @@ public class MatchmakerImpl implements Matchmaker {
 	}
 
 	public synchronized Match findMatch(int playersPerTeam) {
-		// Sure I was sure to implement this :D
+		try{
+			// Sure I was sure to implement this :P
+			
+			// PlayersPerTeam must be > 0
+			if(playersPerTeam <= 0){
+				logger.warning("PlayersPerTeam must be > 0");
+				return null;
+			}
+			
+			// If there are not enough players to fill the teams, unless we want to use bots, there's little we can do ^_^
+			if(players.size() < 2 * playersPerTeam){
+				logger.warning((2 * playersPerTeam) + "Are needed to start a "+playersPerTeam+"v"+playersPerTeam+" game and there are only "+players.size());
+				return null;
+			}
+	
+			// Initialize teams
+			PlayerComposite team1 = new PlayerComposite(playersPerTeam);
+			PlayerComposite team2 = new PlayerComposite(playersPerTeam);
+			
+			// For each team member
+			while(team1.getChildren().size() < playersPerTeam){
+				// Choose the 2 most similar players
+				PlayerComponentPair bestMatch = similarities.poll();
+				
+				// Ignore match if any of the players are already assigned to a team
+				if(bestMatch.getOne().getTeamAssigned() != null || bestMatch.getAnother().getTeamAssigned() != null){
+					continue;
+				}
+				
+				// Put them in different teams
+				team1.addPlayerComponent(bestMatch.getOne());
+				team2.addPlayerComponent(bestMatch.getAnother());
+			}
+					
+			return new Match(team1.getChildrenPlayers(), team2.getChildrenPlayers());
+		} 
 		
-		// If there are not enough players to fill the teams, unless we want to use bots, there's little we can do ^_^
-		if(players.size() < 2 * playersPerTeam)
+		catch(Exception e){
+			logger.log(Level.SEVERE, "Error in findMatch algorithm", e);
 			return null;
-		
-		// We start choosing the most similar players
-		
-		return null;
+		}
 	}
 
-	public synchronized void enterMatchmaking(Player player) {
-		// Store player
-		players.add(player);
-
+	public synchronized void enterMatchmaking(Player newPlayer) {
+		// Calculate newPlayer similarities to the rest of players
+		for(PlayerComponent player : players){
+			double similarity = matcher.getSimilarity(player, newPlayer);
+			similarities.add(new PlayerComponentPair(player, newPlayer, similarity));
+		}
+		
 		// Store time at which he/she enters the system 
-		player.setMatchmakingEnterTime(System.currentTimeMillis());
+		newPlayer.setMatchmakingEnterTime(System.currentTimeMillis());
+		
+		// Store new player
+		players.add(newPlayer);
 	}
 
 }

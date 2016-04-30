@@ -1,14 +1,14 @@
 package com.riotgames.interview.hongkong.matchmaking.skill;
 
-import com.riotgames.interview.hongkong.matchmaking.Player;
+import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
 
 /** 
  * Basic implementation of a skill calculator that calculates skill by dividing numbers of wins by the total number of games  
  * */
-public class BasicSkillCalculator implements SkillCalculatorAlgorithm<Player>{
+public class BasicSkillCalculator implements SkillCalculatorAlgorithm<PlayerComponent>{
 
 	@Override
-	public double getSkill(Player one) {
+	public double getSkill(PlayerComponent one) {
 		long wins = one.getWins();
 		long losses = one.getLosses();
 		

@@ -1,5 +1,7 @@
 package com.riotgames.interview.hongkong.matchmaking;
 
+import com.riotgames.interview.hongkong.matchmaking.player.Player;
+
 public interface Matchmaker {
 
     /**

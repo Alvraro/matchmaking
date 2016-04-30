@@ -1,6 +1,9 @@
-package com.riotgames.interview.hongkong.matchmaking;
+package com.riotgames.interview.hongkong.matchmaking.player;
 
-import test.com.riotgames.interview.hongkong.matchmaking.SampleData;
+import java.util.HashSet;
+
+import com.riotgames.interview.hongkong.matchmaking.PlayerFormatException;
+import com.riotgames.interview.hongkong.matchmaking.SampleData;
 
 /**
  * <p>
@@ -15,7 +18,7 @@ import test.com.riotgames.interview.hongkong.matchmaking.SampleData;
  * solution.
  * </p>
  */
-public class Player implements Skillable {
+public class Player extends PlayerComponent {
 	/** Max number of wins a player can have. More than that it's probably an error */
 	private final static long MAX_WINS = 1000000; // 1.000.000 wins? Really?
 	
@@ -40,57 +43,57 @@ public class Player implements Skillable {
     /** Time at which the player enters the match making */
 	private Long matchmakingEnterTime;
 
-    public Player(String name, long wins, long losses) throws FormatException {
+    public Player(String name, long wins, long losses) throws PlayerFormatException {
     	// Assign player an unique id and increase global counter for next one
     	this.id = nextId++;
-    	
-    	checkName(name);
-    	
-    	checkWins(wins);
-    	
-    	checkLosses(losses);
     	
         this.name = name;
         this.wins = wins;
         this.losses = losses;
+
+    	checkName(name);
+    	checkWins(wins);
+    	checkLosses(losses);
         
         matchmakingEnterTime = null;
     }
 
-	private void checkName(String name) throws FormatException {
+	private void checkName(String name) throws PlayerFormatException {
 		if(name == null)
-			throw new FormatException("Name can't be null");
+			throw new PlayerFormatException(this, "Name can't be null");
 
 		if(name.isEmpty())
-			throw new FormatException("Name can't be empty");
+			throw new PlayerFormatException(this, "Name can't be empty");
 		
 		// TODO If player names are created here, check profanity!
 	}
 
-	private void checkWins(long wins) throws FormatException {
+	private void checkWins(long wins) throws PlayerFormatException {
 		if(wins < 0)
-			throw new FormatException("Wins can't be negative");
+			throw new PlayerFormatException(this, "Wins can't be negative");
 			
 		if(wins > MAX_WINS)
-			throw new FormatException("Wins can't be over " + MAX_WINS);
+			throw new PlayerFormatException(this, "Wins can't be over " + MAX_WINS);
 	}
 	
-    private void checkLosses(long losses) throws FormatException {
+    private void checkLosses(long losses) throws PlayerFormatException {
 		if(losses < 0)
-			throw new FormatException("Losses can't be negative");
+			throw new PlayerFormatException(this, "Losses can't be negative");
 			
 		if(losses > MAX_LOSSES)
-			throw new FormatException("Losses can't be over " + MAX_LOSSES);
+			throw new PlayerFormatException(this, "Losses can't be over " + MAX_LOSSES);
 	}
 	
 	public String getName() {
         return name;
     }
 
+    @Override
     public long getWins() {
         return wins;
     }
 
+    @Override
     public long getLosses() {
         return losses;
     }
@@ -109,9 +112,11 @@ public class Player implements Skillable {
 	}
 
 	@Override
-	public float getSkill() {
-		// TODO Auto-generated method stub
-		return 0;
+	public HashSet<Player> getChildrenPlayers() {
+		// Returns a HashSet with itself
+		HashSet<Player> ret = new HashSet<Player>(1);
+		ret.add(this);
+		return ret;
 	}
     
 }

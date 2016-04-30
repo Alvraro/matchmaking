@@ -2,6 +2,8 @@ package com.riotgames.interview.hongkong.matchmaking;
 
 import java.util.Set;
 
+import com.riotgames.interview.hongkong.matchmaking.player.Player;
+
 public class Match {
 
     private final Set<Player> team1;
