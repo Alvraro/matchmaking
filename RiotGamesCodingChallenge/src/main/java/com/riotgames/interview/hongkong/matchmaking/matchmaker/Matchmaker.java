@@ -27,5 +27,4 @@ public interface Matchmaker {
      * </p>
      */
     void enterMatchmaking(Player player);
-
 }

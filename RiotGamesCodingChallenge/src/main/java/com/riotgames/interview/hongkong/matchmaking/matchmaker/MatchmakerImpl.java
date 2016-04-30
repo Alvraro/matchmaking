@@ -164,4 +164,9 @@ public class MatchmakerImpl implements Matchmaker {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "MatchmakerImpl [matcher=" + matcher + ", skillCalculator=" + skillCalculator + "]";
+	}
+	
 }

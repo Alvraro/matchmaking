@@ -21,5 +21,10 @@ public class BasicSkillMatcher implements Matcher<PlayerComponent> {
 		// 2) Return difference from 1: (same skill = greatest similiarity), 0 (greatest diff = lowest similarity)
 		return 1 - Math.abs(skillCalculator.getSkill(one) - skillCalculator.getSkill(another));
 	}
-	
+
+	@Override
+	public String toString() {
+		return "BasicSkillMatcher [skillCalculator=" + skillCalculator + "]";
+	}
+
 }

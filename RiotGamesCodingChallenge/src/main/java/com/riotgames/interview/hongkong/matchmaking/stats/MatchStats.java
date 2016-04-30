@@ -27,9 +27,10 @@ public class MatchStats {
 	}
 	
 	/**
+	 * 
 	 * Returns abuse score as the diff between the best player in victoryRate of one team and the worst of the other.
 	 * It's averaged over the 2 combinations: team1's best with team2's worst and vice versa.
-	 * The higher this value is the higher chances we'll have that a pro player can abuse of a n00b player even if the teams are balanced.
+	 * The higher this value is the higher potential risk exists a pro player abusing a n00b player even if the teams are balanced.
 	 * */
 	public double getAbuseScore() {
 		return 

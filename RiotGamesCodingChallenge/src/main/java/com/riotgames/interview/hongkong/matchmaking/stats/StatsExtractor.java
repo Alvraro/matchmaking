@@ -8,15 +8,31 @@ import java.util.Set;
 
 import com.riotgames.interview.hongkong.matchmaking.Match;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
+import com.riotgames.interview.hongkong.matchmaking.simulator.Simulator;
 import com.riotgames.interview.hongkong.matchmaking.skill.BasicSkillCalculator;
 
+/**
+ * Class to extract statistics/scores about an algorithm's performance so different approaches can be compared.
+ * Scores are averaged over the number of matches executed.
+ * 
+ * - Balance score [0-1]: Difference between team1 and team2 in avgVictoryRate of their members.
+ * An ideal value of 0 means that both teams have the same avg victory rate, so they're "balanced".  
+ * 
+ * - Abuse score [0-1]: Difference between the best player in victoryRate of one team and the worst of the other.
+ * It's averaged over the 2 combinations: team1's best with team2's worst and vice versa.
+ * The higher this value is the higher potential risk exists a pro player abusing a n00b player even if the teams are balanced.
+ */
 public class StatsExtractor {
 	private final static String SEPARATOR = ";";
 	
 	/** List of registered match stats */
 	private ArrayList<MatchStats> matchStats;
+
+	/** Parent simulator to which statistics belong */
+	private Simulator simulator;
 	
-	public StatsExtractor(){
+	public StatsExtractor(Simulator simulator){
+		this.simulator = simulator;
 		matchStats = new ArrayList<MatchStats>();
 	}
 	
@@ -71,6 +87,9 @@ public class StatsExtractor {
 		NumberFormat formatter = DecimalFormat.getNumberInstance();
 		formatter.setMaximumFractionDigits(4);
 		formatter.setMinimumFractionDigits(4);
+
+		// Title
+		out.println("Showing results for " + simulator);
 		
 		// Header
 		out.print("numMatch"+SEPARATOR);
@@ -122,12 +141,12 @@ public class StatsExtractor {
 		stddevAbuseScore /= matchStats.size();
 		stddevAbuseScore = Math.sqrt(stddevAbuseScore);
 		
-		out.println();
-		out.print("-"+SEPARATOR);
+		out.print("avg(stddev) over " + matchStats.size() + " matches" + SEPARATOR);
 		out.print(formatter.format(avgBalanceScore));
 		out.print("("+formatter.format(stddevBalanceScore)+")");
 		out.print(SEPARATOR);
 		out.print(formatter.format(avgAbuseScore));
 		out.print("("+formatter.format(stddevAbuseScore)+")");
+		out.println();
 	}
 }

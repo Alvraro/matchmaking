@@ -2,10 +2,7 @@ package com.riotgames.interview.hongkong.matchmaking.simulator;
 
 import java.io.PrintStream;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Random;
 
 import com.riotgames.interview.hongkong.matchmaking.Match;
@@ -13,6 +10,7 @@ import com.riotgames.interview.hongkong.matchmaking.PlayerFormatException;
 import com.riotgames.interview.hongkong.matchmaking.SampleData;
 import com.riotgames.interview.hongkong.matchmaking.matchmaker.DefaultMatchmakerFactory;
 import com.riotgames.interview.hongkong.matchmaking.matchmaker.Matchmaker;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.RandomMatchmakerFactory;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 import com.riotgames.interview.hongkong.matchmaking.stats.StatsExtractor;
 
@@ -22,7 +20,7 @@ public class Simulator {
 	private static final int PLAYER_BASE_SIZE = 100;
 	
 	/** Number of matches to generate */
-	private static final int NUM_MATCHES = 10;
+	private static final int NUM_MATCHES = 10000;
 
 	/** Matchmaker to simulate */
 	private Matchmaker matchmaker;
@@ -41,13 +39,22 @@ public class Simulator {
 
 	public static void main(String[] args) throws Exception {
 		// Initialize pseudo-random number generator
-		Random random = new Random(new Date().getTime());
+		Random random = new Random(System.currentTimeMillis());
 
-		// Create matchmaker
-		Matchmaker matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		// Create default matchmaker
+		Matchmaker defaultMatchmaker = new DefaultMatchmakerFactory().createMatchMaker();
 
 		// Create simulator
-		Simulator simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
+		Simulator simulator = new Simulator(defaultMatchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
+		
+		// Execute
+		simulator.execute(NUM_MATCHES, System.out, random);
+		
+		// Create random matchmaker
+		Matchmaker randomMatchmaker = new RandomMatchmakerFactory(random).createMatchMaker();
+		
+		// Create simulator
+		simulator = new Simulator(randomMatchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
 		
 		// Execute
 		simulator.execute(NUM_MATCHES, System.out, random);
@@ -55,23 +62,21 @@ public class Simulator {
 
 	private void execute(int numMatches, PrintStream out, Random random) throws PlayerFormatException {
 		// Create stats extractor
-		StatsExtractor statsExtractor = new StatsExtractor(); 
+		StatsExtractor statsExtractor = new StatsExtractor(this); 
 		
-		// Read sample player database
-		List<Player> samplePlayerList = SampleData.getPlayers();
-		Collections.shuffle(samplePlayerList, random);
+		// Create player reserve from sample database
+		LinkedList<Player> playerReserve = new LinkedList<Player>(SampleData.getPlayers());
 		
-		// And add them to the player reserve
-		HashSet<Player> playerReserve = new HashSet<Player>(samplePlayerList);
+		// Shuffle it
+		Collections.shuffle(playerReserve);
 		
 		// Take initial number of random players from the reserve to enter the matchmaker
-		Iterator<Player> it = playerReserve.iterator();
 		for(int i=0; i<playerBaseSize; ++i){
+			// Draw a player from the tail
+			Player player = playerReserve.pollLast();
+
 			// Insert player into the matchmaker
-			matchmaker.enterMatchmaking(new Player(it.next()));
-			
-			// Then remove it from set to avoid introducing the same player
-			it.remove();
+			matchmaker.enterMatchmaking(new Player(player));
 		}
 		
 		// At this point, matchmaker has PLAYER_BASE_SIZE players
@@ -82,13 +87,12 @@ public class Simulator {
 			Match match = matchmaker.findMatch(playersPerTeam);
 
 			// Matchmaker removes (2*PLAYERS_PER_TEAM) matched players so we need to replace them with random ones 
-			it = playerReserve.iterator();
 			for(int i=0; i<2*playersPerTeam; ++i){
+				// Draw a player from the tail
+				Player player = playerReserve.pollLast();
+
 				// Insert player into the matchmaker
-				matchmaker.enterMatchmaking(new Player(it.next()));
-				
-				// Then remove it from set to avoid introducing the same player
-				it.remove();
+				matchmaker.enterMatchmaking(new Player(player));
 			}
 			
 			// Extract stats from match found
@@ -97,9 +101,19 @@ public class Simulator {
 			// We assume match ends so matched players are eligible again for future random extractions
 			playerReserve.addAll(match.getTeam1());
 			playerReserve.addAll(match.getTeam2());
+			
+			// Shuffle the reserve
+			Collections.shuffle(playerReserve);
 		}
 		
 		// Print simulation stats
-		statsExtractor.printStats(out, true);
+		statsExtractor.printStats(out, false);
 	}
+
+	@Override
+	public String toString() {
+		return "Simulator [matchmaker=" + matchmaker + ", playersPerTeam=" + playersPerTeam + ", playerBaseSize="
+				+ playerBaseSize + "]";
+	}
+	
 }

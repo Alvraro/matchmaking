@@ -21,4 +21,9 @@ public class BasicSkillCalculator implements SkillCalculator<PlayerComponent>{
 		return wins / total;
 	}
 
+	@Override
+	public String toString() {
+		return "BasicSkillCalculator []";
+	}
+
 }
