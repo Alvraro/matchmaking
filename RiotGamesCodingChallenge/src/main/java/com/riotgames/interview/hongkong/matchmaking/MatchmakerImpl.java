@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import com.riotgames.interview.hongkong.matchmaking.matcher.MatchingAlgorithm;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
-import com.riotgames.interview.hongkong.matchmaking.player.PlayerComposite;
+import com.riotgames.interview.hongkong.matchmaking.player.PlayerTeam;
 import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculatorAlgorithm;
 
 /**
@@ -36,7 +36,7 @@ public class MatchmakerImpl implements Matchmaker {
 	private PriorityQueue<PlayerComponentPair> similarities;
 	
 	/** Logger for printing stuff */
-	private Logger logger = Logger.getGlobal();
+	private static Logger logger = Logger.getLogger(MatchmakerImpl.class.toString());
 	
 	//PriorityQueue<>
 
@@ -79,13 +79,13 @@ public class MatchmakerImpl implements Matchmaker {
 			
 			// If there are not enough players to fill the teams, unless we want to use bots, there's little we can do ^_^
 			if(players.size() < 2 * playersPerTeam){
-				logger.warning((2 * playersPerTeam) + "Are needed to start a "+playersPerTeam+"v"+playersPerTeam+" game and there are only "+players.size());
+				logger.warning((2 * playersPerTeam) + " players are needed to start a "+playersPerTeam+"v"+playersPerTeam+" game and there are only "+players.size());
 				return null;
 			}
 	
 			// Initialize teams
-			PlayerComposite team1 = new PlayerComposite(playersPerTeam);
-			PlayerComposite team2 = new PlayerComposite(playersPerTeam);
+			PlayerTeam team1 = new PlayerTeam(playersPerTeam);
+			PlayerTeam team2 = new PlayerTeam(playersPerTeam);
 			
 			// For each team member
 			while(team1.getChildren().size() < playersPerTeam){

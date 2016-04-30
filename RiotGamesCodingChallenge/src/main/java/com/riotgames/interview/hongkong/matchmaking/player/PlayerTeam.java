@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import com.riotgames.interview.hongkong.matchmaking.MatchmakingException;
 
 /** Represents an aggregate (aka "team") of already paired players */
-public class PlayerComposite extends PlayerComponent {
+public class PlayerTeam extends PlayerComponent {
 	/** Average wins of contained players */
 	private long averageWins;
 	
@@ -17,10 +17,10 @@ public class PlayerComposite extends PlayerComponent {
 	private HashSet<PlayerComponent> children;
 
 	/** Logger for printing stuff */
-	private static Logger logger = Logger.getGlobal();
+	private static Logger logger = Logger.getLogger(PlayerTeam.class.toString());
 	
 	/** Create a PlayerComposite with a known initial capacity */
-	public PlayerComposite(int initialSize){
+	public PlayerTeam(int initialSize){
 		averageWins = 0;
 		averageLosses = 0;
 
@@ -29,7 +29,7 @@ public class PlayerComposite extends PlayerComponent {
 	
 	/** Adds a new PlayerComponent as child of this aggregate */
 	public boolean addPlayerComponent(PlayerComponent newPlayerComponent) throws MatchmakingException {
-		if(!children.contains(newPlayerComponent)){
+		if(children.contains(newPlayerComponent)){
 			logger.warning("Rejecting adding twice the same PlayerComponent");
 			return false;
 		}
@@ -41,7 +41,7 @@ public class PlayerComposite extends PlayerComponent {
 		long totalLosses = averageLosses * children.size(); 
 		
 		// Add new player's values
-		totalWins += newPlayerComponent.getWins(); 
+		totalWins += newPlayerComponent.getWins();
 		totalLosses += newPlayerComponent.getLosses();
 
 		// Calculate new averages rounding the results (it's ok to lose some precision)
@@ -85,6 +85,11 @@ public class PlayerComposite extends PlayerComponent {
 	@Override
 	public long getLosses() {
 		return averageLosses;
+	}
+
+	@Override
+	public String toString() {
+		return "PlayerTeam [averageWins=" + averageWins + ", averageLosses=" + averageLosses + ", children=" + children	+ "]";
 	}
 
 }

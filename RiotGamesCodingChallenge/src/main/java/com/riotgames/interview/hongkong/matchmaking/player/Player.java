@@ -17,6 +17,9 @@ import com.riotgames.interview.hongkong.matchmaking.SampleData;
  * {@link SampleData} such that it provides a useful data set to exercise your
  * solution.
  * </p>
+ * I'm assuming:
+ * - Wins/Losses must be in a specific range (see PlayerComponent.MAX_WINS & PlayerComponent.MAX_LOSSES). Otherwise it's an error
+ * - Player names doesn't need to be unique but there must be a non-empty one
  */
 public class Player extends PlayerComponent {
 	/** Max number of wins a player can have. More than that it's probably an error */
@@ -43,6 +46,7 @@ public class Player extends PlayerComponent {
     /** Time at which the player enters the match making */
 	private Long matchmakingEnterTime;
 
+    /** Basic constructor */
     public Player(String name, long wins, long losses) throws PlayerFormatException {
     	// Assign player an unique id and increase global counter for next one
     	this.id = nextId++;
@@ -57,6 +61,11 @@ public class Player extends PlayerComponent {
         
         matchmakingEnterTime = null;
     }
+
+    /** Copy constructor */ 
+	public Player(Player p) throws PlayerFormatException {
+		this(p.name, p.wins, p.losses);
+	}
 
 	private void checkName(String name) throws PlayerFormatException {
 		if(name == null)
@@ -117,6 +126,11 @@ public class Player extends PlayerComponent {
 		HashSet<Player> ret = new HashSet<Player>(1);
 		ret.add(this);
 		return ret;
+	}
+
+	@Override
+	public String toString() {
+		return "Player [id=" + id + ", name=" + name + ", wins=" + wins + ", losses=" + losses + "]";
 	}
     
 }

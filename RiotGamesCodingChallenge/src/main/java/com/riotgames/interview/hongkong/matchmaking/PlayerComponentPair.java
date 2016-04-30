@@ -28,4 +28,9 @@ public class PlayerComponentPair implements Comparable<PlayerComponentPair>{
 		return - Double.compare(similarity, o.similarity);
 	}
 
+	@Override
+	public String toString() {
+		return "PlayerComponentPair [one=" + one + ", another=" + another + ", similarity=" + similarity + "]";
+	}
+
 }

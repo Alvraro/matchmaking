@@ -3,6 +3,8 @@ package com.riotgames.interview.hongkong.matchmaking;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.riotgames.interview.hongkong.matchmaking.player.Player;
+
 public class SampleData {
 
     public static List<SamplePlayer> getSamplePlayers() {
@@ -211,4 +213,17 @@ public class SampleData {
         return players;
     }
 
+    /** Get a valid list of players for convenience of testing */
+    public static List<Player> getPlayers(){
+    	ArrayList<Player> players = new ArrayList<Player>();
+    	
+    	for(SamplePlayer samplePlayer : getSamplePlayers())
+    		try {
+    			players.add(new Player(samplePlayer.getName(), samplePlayer.getWins(), samplePlayer.getLosses()));
+    		} catch (PlayerFormatException e) {
+    			continue;
+    		}
+    
+    	return players;
+    }
 }

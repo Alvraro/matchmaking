@@ -17,7 +17,9 @@ public class BasicSkillMatcher implements MatchingAlgorithm<PlayerComponent> {
 	
 	@Override
 	public double getSimilarity(PlayerComponent one, PlayerComponent another) {
-		return Math.abs(skillCalculator.getSkill(one) - skillCalculator.getSkill(another));
+		// 1) Get skill difference in absolute value: 0 (same skill), 1 (greatest diff: one is pro and the other is n00b)
+		// 2) Return difference from 1: (same skill = greatest similiarity), 0 (greatest diff = lowest similarity)
+		return 1 - Math.abs(skillCalculator.getSkill(one) - skillCalculator.getSkill(another));
 	}
 	
 }
