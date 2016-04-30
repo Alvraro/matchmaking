@@ -23,10 +23,10 @@ import com.riotgames.interview.hongkong.matchmaking.SampleData;
  */
 public class Player extends PlayerComponent {
 	/** Max number of wins a player can have. More than that it's probably an error */
-	private final static long MAX_WINS = 1000000; // 1.000.000 wins? Really?
+	public final static long MAX_WINS = 1000000; // 1.000.000 wins? Really?
 	
 	/** Max number of losses a player can have. More than that it's probably an error */
-	private final static long MAX_LOSSES = 1000000; // 1.000.000 losses? REALLY? Pls uninstall! :D
+	public final static long MAX_LOSSES = 1000000; // 1.000.000 losses? REALLY? Pls uninstall! :D
 	
 	/** Global ID counter to assign players an unique ID */
 	private static int nextId=0;

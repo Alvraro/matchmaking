@@ -6,8 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Set;
 
 import org.junit.Test;
@@ -32,12 +31,16 @@ public class MatchmakerImplTest {
 		assertNull(matchmaker.findMatch(3));
 		assertNull(matchmaker.findMatch(5));
 		assertNull(matchmaker.findMatch(100));
+		assertNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM));
+		assertNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM+1));
+		assertNull(matchmaker.findMatch(0));
+		assertNull(matchmaker.findMatch(-1));
+		assertNull(matchmaker.findMatch(-100));
 	}
-
 	
-	/** Matches can't be found for <= 0 players*/ 
+	/** Matches can't be found for bad cases even with players */ 
 	@Test
-	public void testFindMatchEdgeCases() {
+	public void testFindMatchBadCasesWithPlayers() {
 		MatchmakerImpl matchmaker;
 		try {
 			matchmaker = new MatchmakerImpl();
@@ -46,9 +49,18 @@ public class MatchmakerImplTest {
 			return;
 		}
 
+		// Add players
+		for(Player player : SampleData.getPlayers())
+			matchmaker.enterMatchmaking(player);
+		
+		// Bad cases
+		assertNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM+1));
 		assertNull(matchmaker.findMatch(0));
 		assertNull(matchmaker.findMatch(-1));
 		assertNull(matchmaker.findMatch(-100));
+		
+		// Valid edge case
+		assertNotNull(matchmaker.findMatch(MatchmakerImpl.MAX_PLAYERS_PER_TEAM));
 	}
 
 	/** Test player creation errors */
@@ -62,6 +74,9 @@ public class MatchmakerImplTest {
 			return;
 		}
 
+		// Null players are simply ignored. An exception could be thrown instead but I want to respect the original interface  
+		matchmaker.enterMatchmaking(null);
+		
 		try{
 			matchmaker.enterMatchmaking(new Player(null, 1, 1));
 			fail("Exception not thrown");
@@ -84,10 +99,10 @@ public class MatchmakerImplTest {
 		}
 
 		try{
-			matchmaker.enterMatchmaking(new Player("sadadsa", 1000001, 1));
+			matchmaker.enterMatchmaking(new Player("sadadsa", Player.MAX_WINS+1, 1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
-			assertEquals("Wins can't be over 1000000", e.getMessage());
+			assertEquals("Wins can't be over "+Player.MAX_WINS, e.getMessage());
 		}
 
 		try{
@@ -98,10 +113,10 @@ public class MatchmakerImplTest {
 		}
 
 		try{
-			matchmaker.enterMatchmaking(new Player("sadadsa", 1, 10000001));
+			matchmaker.enterMatchmaking(new Player("sadadsa", 1, Player.MAX_LOSSES+1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
-			assertEquals("Losses can't be over 1000000", e.getMessage());
+			assertEquals("Losses can't be over "+Player.MAX_LOSSES, e.getMessage());
 		}
 
 		for(SamplePlayer samplePlayer : SampleData.getSamplePlayers())
@@ -138,9 +153,9 @@ public class MatchmakerImplTest {
 			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 1));			
 			matchmaker.enterMatchmaking(new Player("asdsasad", 1, 0));
 			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 0));
-			matchmaker.enterMatchmaking(new Player("asdsasad", 1000000, 1));
-			matchmaker.enterMatchmaking(new Player("asdsasad", 1, 1000000));
-			matchmaker.enterMatchmaking(new Player("asdsasad", 1000000, 1000000));
+			matchmaker.enterMatchmaking(new Player("asdsasad", Player.MAX_WINS, 1));
+			matchmaker.enterMatchmaking(new Player("asdsasad", 1, Player.MAX_LOSSES));
+			matchmaker.enterMatchmaking(new Player("asdsasad", Player.MAX_WINS, Player.MAX_LOSSES));
 		} catch (PlayerFormatException e){
 			fail("No exceptions allowed! >_<" + e);
 		}
@@ -172,8 +187,14 @@ public class MatchmakerImplTest {
 			
 			assertTrue(team1!=null && team1.size()==1 && team2!=null && team2.size()==1);
 			
-			assertTrue(team1.toArray()[0] == p1);
-			assertTrue(team2.toArray()[0] == p2);	
+			// Order is not relevant, but if team1 contains p1 then team2 contains p2 and vice versa
+			if(team1.iterator().next() == p1)
+				assertTrue(team2.iterator().next() == p2);
+			else if(team1.iterator().next() == p2)
+				assertTrue(team2.iterator().next() == p1);
+			else
+				fail();
+				
 		} catch(Exception e){
 			e.printStackTrace();
 			fail("No exceptions allowed! >_<: " + e);
@@ -181,85 +202,80 @@ public class MatchmakerImplTest {
 	}
 
 	/** 
-	 * Test several basic FindMatch WITHOUT concurrency and a perfect match 
+	 * Test several basic FindMatch in a row WITHOUT concurrency and a perfect match 
 	 * */
 	@Test
 	public void testFindPerfectMatchNotConcurrent() {
-		for(int n=1; n<5; ++n)
-			testFindPerfectMatchNvNNotConcurrent(n);
+		try{
+			// Create matchmaker
+			MatchmakerImpl matchmaker = new MatchmakerImpl();
+		
+			for(int n=1; n<=MatchmakerImpl.MAX_PLAYERS_PER_TEAM; ++n)
+				testFindPerfectMatchNvNNotConcurrent(matchmaker, n);
+			
+		} catch(Exception e){
+			e.printStackTrace();
+			fail("No exceptions allowed! >_<: " + e);
+		}
 	}
 	
 	/** 
 	 * Test a basic NvN FindMatch WITHOUT concurrency and a perfect match. 
 	 * N random players are created and cloned in name, skill, etc. so teams have to be identical 
 	 * */
-	public void testFindPerfectMatchNvNNotConcurrent(int n) {
+	public void testFindPerfectMatchNvNNotConcurrent(MatchmakerImpl matchmaker, int n) {
 		try{
-			// Create matchmaker
-			MatchmakerImpl matchmaker = new MatchmakerImpl();
-
-			// Create expected teams
-			HashSet<Player> expectedTeam1 = new HashSet<Player>(n);
-			HashSet<Player> expectedTeam2 = new HashSet<Player>(n);
-			
-			// Add n basic different players for both expected teams
+			// Create a list of N players and another one with N copied players 
+			ArrayList<Player> players = new ArrayList<Player>(n);
+			ArrayList<Player> copyPlayers = new ArrayList<Player>(n);
 			for(int i=1; i<=n; ++i){
-				// Add an arbitrary random player to team1
+				// Add an arbitrary random player to players
 				Player p = new Player("p"+i, 10+i, 20+i);
-				expectedTeam1.add(p);
+				players.add(p);
 				
-				// And add a copy to team2
-				expectedTeam2.add(new Player(p));
+				// And add a copy to copyPlayers
+				copyPlayers.add(new Player(p));
 			}
 
-			// Array to store all matches found
-			//ArrayList<Match> matches = new ArrayList<Match>();
-			
-			// Enter (n-1) players from each team
-			Iterator<Player> it1 = expectedTeam1.iterator();
-			Iterator<Player> it2 = expectedTeam2.iterator();
-
 			for(int i=0; i<(n-1); ++i){
-				matchmaker.enterMatchmaking(it1.next());
+				matchmaker.enterMatchmaking(players.get(i));
 				
 				// No match can be found yet
 				assertNull(matchmaker.findMatch(n));
 				
-				matchmaker.enterMatchmaking(it2.next());
+				matchmaker.enterMatchmaking(copyPlayers.get(i));
 				
 				// No match can be found yet
 				assertNull(matchmaker.findMatch(n));
 			}
 			
 			// Enter last players
-			matchmaker.enterMatchmaking(it1.next());
+			matchmaker.enterMatchmaking(players.get(n-1));
 			
 			// No match can be found yet
 			assertNull(matchmaker.findMatch(n));
 
-			matchmaker.enterMatchmaking(it2.next());
-			
-			// Match found!
+			// Match should be found after adding last player
+			matchmaker.enterMatchmaking(copyPlayers.get(n-1));
 			Match matchFound = matchmaker.findMatch(n);
 			assertNotNull(matchFound);
 			
-			// Teams should be the ones we were expecting!
+			// Teams should have identical size
 			Set<Player> team1 = matchFound.getTeam1();
 			Set<Player> team2 = matchFound.getTeam2();
-			
 			assertTrue(team1!=null && team1.size()==n && team2!=null && team2.size()==n);
-			
-			// Order is not relevant so we identify if team1==expectedTeam1 by inspecting one arbitrary player
-			if(expectedTeam1.contains(team1.iterator().next())){
-				assertEquals(expectedTeam1, team1);	
-				assertEquals(expectedTeam2, team2);
+
+			// And each team for each player should contain the original or the copy
+			for(int i=0; i<n; ++i){
+				if(team1.contains(players.get(i)))
+					assertTrue(team2.contains(copyPlayers.get(i)));
+					
+				else if(team1.contains(copyPlayers.get(i)))
+					assertTrue(team2.contains(players.get(i)));
+					
+				else
+					fail();
 			}
-			
-			else{
-				assertEquals(expectedTeam1, team2);	
-				assertEquals(expectedTeam2, team1);
-			}
-			
 		} catch(Exception e){
 			e.printStackTrace();
 			fail("No exceptions allowed! >_<: " + e);
