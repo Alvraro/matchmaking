@@ -7,6 +7,8 @@ import java.util.logging.Logger;
 import com.riotgames.interview.hongkong.matchmaking.Match;
 import com.riotgames.interview.hongkong.matchmaking.PlayerComponentPair;
 import com.riotgames.interview.hongkong.matchmaking.matcher.Matcher;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.initializer.InitialTeams;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.initializer.TeamInitializer;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerBase;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
@@ -40,11 +42,14 @@ public class MatchmakerImpl implements Matchmaker {
 
 	/** Flag set to true if long queued players should have preference */
 	private boolean longQueuedPreference;
+
+	/** Algorithm to configure initial teams */
+	private TeamInitializer teamInitializer;
 	
 	/** Logger for printing stuff */
 	private static Logger logger = Logger.getLogger(MatchmakerImpl.class.toString());
 	
-	public MatchmakerImpl(SkillCalculator<PlayerComponent> skillCalculator, Matcher<PlayerComponent> matcher, boolean longQueuedPreference) {
+	public MatchmakerImpl(SkillCalculator<PlayerComponent> skillCalculator, Matcher<PlayerComponent> matcher, TeamInitializer teamInitializer) {
 		playerBase = new PlayerBase();
 		
 		similarities = new PriorityQueue<PlayerComponentPair>();
@@ -55,7 +60,7 @@ public class MatchmakerImpl implements Matchmaker {
 		
 		this.matcher = matcher;
 		this.skillCalculator = skillCalculator;
-		this.longQueuedPreference = longQueuedPreference;
+		this.teamInitializer = teamInitializer;
 	}
 
 	public synchronized Match findMatch(int playersPerTeam) {
@@ -81,24 +86,10 @@ public class MatchmakerImpl implements Matchmaker {
 			}
 	
 			// Initialize teams
-			PlayerTeam team1 = new PlayerTeam(playersPerTeam);
-			PlayerTeam team2 = new PlayerTeam(playersPerTeam);
-			long matchmakingStartTime = System.currentTimeMillis();
-			
-			// If there is preference for longest queued players
-			if(longQueuedPreference){
-				// Choose player queued for longest to avoid the possibility of infinite queue staying!
-				PlayerComponent longestQueuedPlayer = playerBase.getLongestQueuedPlayer();
+			InitialTeams initialTeams = teamInitializer.getInitialTeams();
+			PlayerTeam team1 = initialTeams.getTeam1(); 
+			PlayerTeam team2 = initialTeams.getTeam2();
 				
-				// Add it to one team
-				team1.addPlayerComponent(longestQueuedPlayer);
-
-				// TODO Find its best match
-				/*PlayerComponent bestMatch = Collections.max(playerBase, new Comparator<PlayerComponent>() {
-					
-				});*/
-			}
-			
 			// While teams are not completed (we are filling both at the same time so we just need to check one)
 			while(team1.getChildren().size() < playersPerTeam){
 				// Choose the 2 most similar players

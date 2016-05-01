@@ -32,6 +32,9 @@ public class DefaultMatchmakerFactory implements AbstractMatchmakerFactory {
 		AbstractMatcherFactory<PlayerComponent> matcherFactory = new BasicSkillMatcherFactory(skillCalculator);
 		Matcher<PlayerComponent> matcher = matcherFactory.createMatcher();
 		
+		// Create a TeamInitializer strategy
+		
+		
 		// Finally, assemble the Matchmaker
 		return new MatchmakerImpl(skillCalculator, matcher, longQueuedPreference);
 	}
