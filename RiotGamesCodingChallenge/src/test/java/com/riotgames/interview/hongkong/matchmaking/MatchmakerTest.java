@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.riotgames.interview.hongkong.matchmaking.matchmaker.DefaultMatchmakerFactory;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.SimpleSkillBasedMatchmakerFactory;
 import com.riotgames.interview.hongkong.matchmaking.matchmaker.Matchmaker;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 
@@ -23,7 +23,7 @@ public class MatchmakerTest {
 	public void testFindMatchWithoutPlayers() {
 		Matchmaker matchmaker;
 		try {
-			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			matchmaker = new SimpleSkillBasedMatchmakerFactory().createMatchMaker();
 		} catch (Exception e) {
 			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
@@ -45,7 +45,7 @@ public class MatchmakerTest {
 	public void testFindMatchBadCasesWithPlayers() {
 		Matchmaker matchmaker;
 		try {
-			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			matchmaker = new SimpleSkillBasedMatchmakerFactory().createMatchMaker();
 		} catch (Exception e) {
 			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
@@ -70,7 +70,7 @@ public class MatchmakerTest {
 	public void testEnterMatchmakingBadPlayers() {
 		Matchmaker matchmaker;
 		try {
-			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			matchmaker = new SimpleSkillBasedMatchmakerFactory().createMatchMaker();
 		} catch (Exception e) {
 			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
@@ -80,61 +80,76 @@ public class MatchmakerTest {
 		matchmaker.enterMatchmaking(null);
 		
 		try{
-			matchmaker.enterMatchmaking(new Player(null, 1, 1));
+			matchmaker.enterMatchmaking(new Player(null, 1, 1, 1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
 			assertEquals("Name can't be null", e.getMessage());
 		}
 
 		try{
-			matchmaker.enterMatchmaking(new Player("", 1, 1));
+			matchmaker.enterMatchmaking(new Player("", 1, 1, 1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
 			assertEquals("Name can't be empty", e.getMessage());
 		}
 		
 		try{
-			matchmaker.enterMatchmaking(new Player("asdasd", -1, 1));
+			matchmaker.enterMatchmaking(new Player("asdasd", -1, 1, 1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
-			assertEquals("Wins can't be negative", e.getMessage());
+			assertEquals("Wins (-1) can't be negative", e.getMessage());
 		}
 
 		try{
-			matchmaker.enterMatchmaking(new Player("sadadsa", Player.MAX_WINS+1, 1));
+			matchmaker.enterMatchmaking(new Player("sadadsa", Player.MAX_WINS+1, 1, 1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
-			assertEquals("Wins can't be over "+Player.MAX_WINS, e.getMessage());
+			assertEquals("Wins ("+(Player.MAX_WINS+1)+") can't be over " + Player.MAX_WINS, e.getMessage());
 		}
 
 		try{
-			matchmaker.enterMatchmaking(new Player("asdasd", 1, -1));
+			matchmaker.enterMatchmaking(new Player("asdasd", 1, -1, 1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
-			assertEquals("Losses can't be negative", e.getMessage());
+			assertEquals("Losses (-1) can't be negative", e.getMessage());
 		}
 
 		try{
-			matchmaker.enterMatchmaking(new Player("sadadsa", 1, Player.MAX_LOSSES+1));
+			matchmaker.enterMatchmaking(new Player("sadadsa", 1, Player.MAX_LOSSES+1, 1));
 			fail("Exception not thrown");
 		} catch (PlayerFormatException e){
-			assertEquals("Losses can't be over "+Player.MAX_LOSSES, e.getMessage());
+			assertEquals("Losses ("+(Player.MAX_LOSSES+1)+") can't be over " + Player.MAX_LOSSES, e.getMessage());
 		}
 
+		try{
+			matchmaker.enterMatchmaking(new Player("sadadsa", 1, 1, Player.MAX_LEVEL+1));
+			fail("Exception not thrown");
+		} catch (PlayerFormatException e){
+			assertEquals("Level ("+(Player.MAX_LEVEL+1)+") can't be over " + Player.MAX_LEVEL, e.getMessage());
+		}
+		
+		try{
+			matchmaker.enterMatchmaking(new Player("sadadsa", 1, 1, Player.MIN_LEVEL-1));
+			fail("Exception not thrown");
+		} catch (PlayerFormatException e){
+			assertEquals("Level ("+(Player.MIN_LEVEL-1)+") can't be below " + Player.MIN_LEVEL, e.getMessage());
+		}
+		
 		for(SamplePlayer samplePlayer : SampleData.getSamplePlayers())
 		try {
-			matchmaker.enterMatchmaking(new Player(samplePlayer.getName(), samplePlayer.getWins(), samplePlayer.getLosses()));
+			matchmaker.enterMatchmaking(
+					new Player(samplePlayer.getName(), samplePlayer.getWins(), samplePlayer.getLosses(), samplePlayer.getLevel()));
 		} catch (PlayerFormatException e) {
 			String name = e.getPlayer().getName();
 			
 			if(name.equalsIgnoreCase("Ramon Huff"))
-				assertEquals("Wins can't be negative", e.getMessage());
+				assertEquals("Wins (-99) can't be negative", e.getMessage());
 			
 			else if(name.equalsIgnoreCase("Ann Owen"))
-				assertEquals("Wins can't be over 1000000", e.getMessage());
+				assertEquals("Wins (9223372036854775807) can't be over 1000000", e.getMessage());
 			
 			else if(name.equalsIgnoreCase("Kurt Obrien"))
-				assertEquals("Losses can't be negative", e.getMessage());
+				assertEquals("Losses (-760) can't be negative", e.getMessage());
 			
 			else fail("Unexpected exception");
 		}
@@ -145,19 +160,21 @@ public class MatchmakerTest {
 	public void testEnterMatchmakingEdgePlayers() {
 		Matchmaker matchmaker;
 		try {
-			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			matchmaker = new SimpleSkillBasedMatchmakerFactory().createMatchMaker();
 		} catch (Exception e) {
 			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
 		}
 
 		try{
-			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 1));			
-			matchmaker.enterMatchmaking(new Player("asdsasad", 1, 0));
-			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 0));
-			matchmaker.enterMatchmaking(new Player("asdsasad", Player.MAX_WINS, 1));
-			matchmaker.enterMatchmaking(new Player("asdsasad", 1, Player.MAX_LOSSES));
-			matchmaker.enterMatchmaking(new Player("asdsasad", Player.MAX_WINS, Player.MAX_LOSSES));
+			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 1, 1));			
+			matchmaker.enterMatchmaking(new Player("asdsasad", 1, 0, 1));
+			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 0, 1));
+			matchmaker.enterMatchmaking(new Player("asdsasad", Player.MAX_WINS, 1, 1));
+			matchmaker.enterMatchmaking(new Player("asdsasad", 1, Player.MAX_LOSSES, 1));
+			matchmaker.enterMatchmaking(new Player("asdsasad", Player.MAX_WINS, Player.MAX_LOSSES, 1));
+			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 0, Player.MAX_LEVEL));
+			matchmaker.enterMatchmaking(new Player("asdsasad", 0, 0, Player.MIN_LEVEL));
 		} catch (PlayerFormatException e){
 			fail("No exceptions allowed! >_<" + e);
 		}
@@ -168,7 +185,7 @@ public class MatchmakerTest {
 	public void testPlayerCapacity() {
 		Matchmaker matchmaker;
 		try {
-			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			matchmaker = new SimpleSkillBasedMatchmakerFactory().createMatchMaker();
 		} catch (Exception e) {
 			fail("Can't instantiate Matchmaker: " + e.getMessage());
 			return;
@@ -181,10 +198,10 @@ public class MatchmakerTest {
 			
 			// Fully load matchmaker with 'commonPlayerName' players 
 			for(int i=0; i<Matchmaker.MAX_PLAYERS; ++i)
-				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1));
+				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1, 1));
 			
 			// Add one more player with a different name
-			matchmaker.enterMatchmaking(new Player(anotherPlayerName, 0, 1));
+			matchmaker.enterMatchmaking(new Player(anotherPlayerName, 0, 1, 1));
 			
 			// Matchmaker should have silently ignored this player!
 			
@@ -204,7 +221,7 @@ public class MatchmakerTest {
 			// If the name was odd, we need one more player and match (WHO set that MAX constant to an odd number? ¬_¬) to empty the matchmaker
 			int maxPlayers = Matchmaker.MAX_PLAYERS;
 			if((maxPlayers % 2) != 0){
-				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1));
+				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1, 1));
 				match = matchmaker.findMatch(1);
 				assertNotNull(match);
 				assertTrue(match.getTeam1().iterator().next().getName().equals(commonPlayerName));
@@ -212,8 +229,8 @@ public class MatchmakerTest {
 			}
 			
 			// Add two more players with a different name
-			matchmaker.enterMatchmaking(new Player(yetAnotherPlayerName, 0, 1));
-			matchmaker.enterMatchmaking(new Player(yetAnotherPlayerName, 0, 1));
+			matchmaker.enterMatchmaking(new Player(yetAnotherPlayerName, 0, 1, 1));
+			matchmaker.enterMatchmaking(new Player(yetAnotherPlayerName, 0, 1, 1));
 			
 			// Find and check match
 			match = matchmaker.findMatch(1);
@@ -234,8 +251,8 @@ public class MatchmakerTest {
 	@Test
 	public void testStress() {
 		try {
-			testStress(new DefaultMatchmakerFactory(true).createMatchMaker());
-			testStress(new DefaultMatchmakerFactory(false).createMatchMaker());
+			testStress(new SimpleSkillBasedMatchmakerFactory(true).createMatchMaker());
+			testStress(new SimpleSkillBasedMatchmakerFactory(false).createMatchMaker());
 		} catch (Exception e) {
 			fail("No exceptions allowed! >_<" + e);
 			return;
@@ -248,7 +265,7 @@ public class MatchmakerTest {
 
 			// Fully load matchmaker 
 			for(int i=0; i<Matchmaker.MAX_PLAYERS; ++i)
-				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1));
+				matchmaker.enterMatchmaking(new Player(commonPlayerName, 0, 1, 1));
 			
 			// Empty matchmaker finding matches
 			for(int i=0; i<Matchmaker.MAX_PLAYERS/(2*Matchmaker.MAX_PLAYERS_PER_TEAM); ++i){
@@ -270,10 +287,10 @@ public class MatchmakerTest {
 	public void testFindMatch1v1NotConcurrent() {
 		try{
 			// Create matchmaker
-			Matchmaker matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			Matchmaker matchmaker = new SimpleSkillBasedMatchmakerFactory().createMatchMaker();
 			// Create 2 basic players
-			Player p1 = new Player("p1", 100, 100);
-			Player p2 = new Player("p2", 100, 100);
+			Player p1 = new Player("p1", 100, 100, 1);
+			Player p2 = new Player("p2", 100, 100, 1);
 			
 			// Enter p1
 			matchmaker.enterMatchmaking(p1);
@@ -316,11 +333,11 @@ public class MatchmakerTest {
 			int playersPerGame = 2;
 			
 			// Create matchmaker
-			Matchmaker matchmakerWithPref = new DefaultMatchmakerFactory(true).createMatchMaker();
+			Matchmaker matchmakerWithPref = new SimpleSkillBasedMatchmakerFactory(true).createMatchMaker();
 
 			// Create and enter the first (and so, the oldest) player with a certain skill
 			String oldestPlayerName = "oldestPlayer";
-			Player oldestPlayer = new Player(oldestPlayerName, 100, 0);
+			Player oldestPlayer = new Player(oldestPlayerName, 100, 0, 1);
 			matchmakerWithPref.enterMatchmaking(oldestPlayer); //skill = 100/100 = 1
 			
 			// Wait a little bit, please, otherwise players will have the same age!
@@ -329,7 +346,7 @@ public class MatchmakerTest {
 			// Create and enter some basic players with different skill from oldest player's
 			String basicPlayerName = "basicPlayer";
 			for(int i=0; i<numBasicPlayers; ++i)
-				matchmakerWithPref.enterMatchmaking(new Player(basicPlayerName, 100, 100)); // skill 100/200 = 0.5
+				matchmakerWithPref.enterMatchmaking(new Player(basicPlayerName, 100, 100, 1)); // skill 100/200 = 0.5
 			
 			// Find match of an arbitrary size
 			Match matchFound = matchmakerWithPref.findMatch(playersPerGame);
@@ -346,15 +363,15 @@ public class MatchmakerTest {
 			// Repeat everything WITHOUT longestQueuedPlayer preference
 			
 			// Create matchmaker
-			Matchmaker matchmakerWithoutPref = new DefaultMatchmakerFactory(false).createMatchMaker();
+			Matchmaker matchmakerWithoutPref = new SimpleSkillBasedMatchmakerFactory(false).createMatchMaker();
 
 			// Create and enter the first (and so, the oldest) player with a certain skill
-			oldestPlayer = new Player(oldestPlayerName, 100, 0);
+			oldestPlayer = new Player(oldestPlayerName, 100, 0, 1);
 			matchmakerWithoutPref.enterMatchmaking(oldestPlayer); //skill = 100/100 = 1
 			
 			// Create and enter some basic players with different skill from oldest player's
 			for(int i=0; i<numBasicPlayers; ++i)
-				matchmakerWithoutPref.enterMatchmaking(new Player(basicPlayerName, 100, 100)); // skill 100/200 = 0.5
+				matchmakerWithoutPref.enterMatchmaking(new Player(basicPlayerName, 100, 100, 1)); // skill 100/200 = 0.5
 			
 			// Find match of an arbitrary size
 			matchFound = matchmakerWithoutPref.findMatch(playersPerGame);
@@ -382,7 +399,7 @@ public class MatchmakerTest {
 	public void testFindPerfectMatchNotConcurrent() {
 		try{
 			// Create matchmaker
-			Matchmaker matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			Matchmaker matchmaker = new SimpleSkillBasedMatchmakerFactory().createMatchMaker();
 		
 			for(int n=1; n<=Matchmaker.MAX_PLAYERS_PER_TEAM; ++n)
 				testFindPerfectMatchNvNNotConcurrent(matchmaker, n);
@@ -404,7 +421,7 @@ public class MatchmakerTest {
 			ArrayList<Player> copyPlayers = new ArrayList<Player>(n);
 			for(int i=1; i<=n; ++i){
 				// Add an arbitrary random player to players
-				Player p = new Player("p"+i, 10+i, 20+i);
+				Player p = new Player("p"+i, 10+i, 20+i, 1);
 				players.add(p);
 				
 				// And add a copy to copyPlayers

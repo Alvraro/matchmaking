@@ -219,7 +219,7 @@ public class SampleData {
     	
     	for(SamplePlayer samplePlayer : getSamplePlayers())
     		try {
-    			players.add(new Player(samplePlayer.getName(), samplePlayer.getWins(), samplePlayer.getLosses()));
+    			players.add(new Player(samplePlayer.getName(), samplePlayer.getWins(), samplePlayer.getLosses(), samplePlayer.getLevel()));
     		} catch (PlayerFormatException e) {
     			continue;
     		}

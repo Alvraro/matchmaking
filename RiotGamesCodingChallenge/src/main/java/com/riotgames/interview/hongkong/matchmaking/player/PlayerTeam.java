@@ -16,6 +16,9 @@ public class PlayerTeam extends PlayerComponent {
 	/** Set of contained players */
 	private HashSet<PlayerComponent> children;
 
+	/** Average normalized level of contained players */
+	private double averageNormalizedLevel;
+
 	/** Logger for printing stuff */
 	private static Logger logger = Logger.getLogger(PlayerTeam.class.toString());
 	
@@ -52,15 +55,18 @@ public class PlayerTeam extends PlayerComponent {
 		
 		// First get current totals
 		long totalWins = averageWins * children.size();
-		long totalLosses = averageLosses * children.size(); 
+		long totalLosses = averageLosses * children.size();
+		double totalNormalizedLevel = averageNormalizedLevel * children.size();
 		
 		// Add new player's values
 		totalWins += newPlayerComponent.getWins();
 		totalLosses += newPlayerComponent.getLosses();
-
+		totalNormalizedLevel += newPlayerComponent.getNormalizedLevel();
+		
 		// Calculate new averages rounding the results (it's ok to lose some precision)
-		averageWins = Math.round(totalWins / (children.size() + 1.0));
+		averageWins = Math.round(totalWins / (children.size() + 1.0)); // add 1 because the new player hasn't be added yet!
 		averageLosses = Math.round(totalLosses / (children.size() + 1.0));
+		averageNormalizedLevel = totalNormalizedLevel / (children.size() + 1.0);
 		
 		// Notify player about team assignment
 		newPlayerComponent.setTeamAssigned(this);
@@ -118,6 +124,32 @@ public class PlayerTeam extends PlayerComponent {
 		}
 		
 		return oldestTime;
+	}
+
+	@Override
+	public double getNormalizedLevel() {
+		return averageNormalizedLevel;
+	}
+
+	@Override
+	public double getNormalizedMatchmakingTime() {
+		// It's easier to just recalculate the average
+		// TODO cache and update properly...
+		double average=0;
+		for(PlayerComponent child : children){
+			average += child.getNormalizedMatchmakingTime();
+		}
+		average /= children.size();
+		
+		return average;
+	}
+
+	@Override
+	public void updateDynamicFields(long checkPointTime) {
+		// Update children
+		for(PlayerComponent child : children){
+			child.updateDynamicFields(checkPointTime);
+		}
 	}
 
 }

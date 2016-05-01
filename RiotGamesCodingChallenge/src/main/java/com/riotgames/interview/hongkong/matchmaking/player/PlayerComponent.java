@@ -31,7 +31,7 @@ public abstract class PlayerComponent {
 	/** Get all children Player objects contained: N for a PlayerTeam, 1 for a single Player */
 	public abstract HashSet<Player> getChildrenPlayers();
 
-	/** Get oldest matchmaking enter time */
+	/** Get player's matchmaking enter time (ms) or team's oldest */
 	public abstract Long getOldestMatchmakingEnterTime();
 	
 	/** Explicit hashCode implementation is mandatory */
@@ -41,4 +41,20 @@ public abstract class PlayerComponent {
 	/** Explicit equals implementation is mandatory */
 	@Override
 	public abstract boolean equals(Object obj);
+
+	/** Get player's normalized level or team average: 1 = max level, 0 min */
+	public abstract double getNormalizedLevel();
+
+	/** Get player's normalized matchmaking enter time or team average: 1 = max time, 0 min */
+	public abstract double getNormalizedMatchmakingTime();
+
+	/**
+	 * Update dynamic fields which can change over time.
+	 * We receive a fixed checkpoint time instead of using System.currentTimeMillis()
+	 * because otherwise there would be differences depending on when we update each player.
+	 *   
+	 * @param checkpointTime time (ms) considered to be the current time
+	 */
+	public abstract void updateDynamicFields(long checkPointTime);
+
 }

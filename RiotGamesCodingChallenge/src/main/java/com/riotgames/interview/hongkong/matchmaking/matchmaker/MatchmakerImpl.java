@@ -21,12 +21,6 @@ import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
  * On the other hand, MatchmakerImpl() constructor can complain if there are configuration problems.
  */
 public class MatchmakerImpl implements Matchmaker {
-	/** Path to the Matchmaker's configuration file */
-	//private static final String MATCHMAKER_CONFIG_FILE = "src/main/resources/matchmaker.properties";
-
-	/** Configuration properties */
-	//private Properties properties;
-
 	/** Current player base */
 	private PlayerBase playerBase;
 
@@ -49,10 +43,6 @@ public class MatchmakerImpl implements Matchmaker {
 		playerBase = new PlayerBase();
 		
 		similarities = new PriorityQueue<PlayerComponentPair>();
-		
-		/** Read properties file */		
-		//properties = new Properties();
-		//properties.load(new FileInputStream(MATCHMAKER_CONFIG_FILE));
 		
 		this.matcher = matcher;
 		this.skillCalculator = skillCalculator;
@@ -228,9 +218,16 @@ public class MatchmakerImpl implements Matchmaker {
 			return;
 		}
 		
+		// Ask new player to update its dynamic fields because they can alter similarity calculations
+		long checkPointTime = System.currentTimeMillis();
+		newPlayer.updateDynamicFields(checkPointTime);
+		
 		try{
 			// Calculate newPlayer similarities to the rest of current players/teams in progress
 			for(PlayerComponent player : playerBase.getPlayers()){
+				// Ask player to update its dynamic info
+				player.updateDynamicFields(checkPointTime);
+				
 				double similarity = matcher.getSimilarity(player, newPlayer);
 				similarities.add(new PlayerComponentPair(player, newPlayer, similarity));
 			}

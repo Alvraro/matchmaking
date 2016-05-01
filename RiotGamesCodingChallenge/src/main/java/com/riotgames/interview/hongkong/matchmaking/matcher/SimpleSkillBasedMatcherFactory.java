@@ -4,19 +4,20 @@ import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
 import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
 /** 
- * MatcherFactory that creates BasicSkillMatcher
+ * MatcherFactory that creates SimpleSkillBasedMatcher
  * */
-public class BasicSkillMatcherFactory implements AbstractMatcherFactory<PlayerComponent> {
+public class SimpleSkillBasedMatcherFactory implements AbstractMatcherFactory<PlayerComponent> {
 
+	/** Algorithm to estimate player's skill */
 	private SkillCalculator<PlayerComponent> skillCalculator;
 
-	public BasicSkillMatcherFactory(SkillCalculator<PlayerComponent> skillCalculator){
+	public SimpleSkillBasedMatcherFactory(SkillCalculator<PlayerComponent> skillCalculator){
 		this.skillCalculator = skillCalculator;
 	}
 	
 	@Override
 	public Matcher<PlayerComponent> createMatcher() {
-		return new BasicSkillMatcher(skillCalculator);
+		return new SimpleSkillBasedMatcher(skillCalculator);
 	}
 
 }

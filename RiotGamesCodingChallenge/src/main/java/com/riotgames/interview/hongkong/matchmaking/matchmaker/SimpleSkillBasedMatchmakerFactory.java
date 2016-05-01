@@ -1,24 +1,31 @@
 package com.riotgames.interview.hongkong.matchmaking.matchmaker;
 
 import com.riotgames.interview.hongkong.matchmaking.matcher.AbstractMatcherFactory;
-import com.riotgames.interview.hongkong.matchmaking.matcher.BasicSkillMatcherFactory;
+import com.riotgames.interview.hongkong.matchmaking.matcher.SimpleSkillBasedMatcherFactory;
 import com.riotgames.interview.hongkong.matchmaking.matcher.Matcher;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
 import com.riotgames.interview.hongkong.matchmaking.skill.AbstractSkillCalculatorFactory;
 import com.riotgames.interview.hongkong.matchmaking.skill.BasicSkillCalculatorFactory;
 import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
-public class DefaultMatchmakerFactory implements AbstractMatchmakerFactory {
+/** 
+ * MatchmakerFactory that creates a basic Matchmaker that uses:
+ * - SimpleSkillBasedMatcher that calculates similarities based solely on player skill
+ * - BasicSkillCalculator for basic skill estimations based on win/loss ratio
+ * 
+ * It's configured by weights that must be empirically adjusted
+ */
+public class SimpleSkillBasedMatchmakerFactory implements AbstractMatchmakerFactory {
 
 	/** Special preference for long queued players */
 	private boolean longQueuedPreference;
 
-	public DefaultMatchmakerFactory() {
+	public SimpleSkillBasedMatchmakerFactory() {
 		this(false);
 	}
 
 	/** Creates factory with given special preference for long queued players */
-	public DefaultMatchmakerFactory(boolean longQueuedPreference) {
+	public SimpleSkillBasedMatchmakerFactory(boolean longQueuedPreference) {
 		this.longQueuedPreference = longQueuedPreference;
 	}
 
@@ -29,7 +36,7 @@ public class DefaultMatchmakerFactory implements AbstractMatchmakerFactory {
 		SkillCalculator<PlayerComponent> skillCalculator = calculatorFactory.createSkillCalculator();
 		
 		// Create a Matcher
-		AbstractMatcherFactory<PlayerComponent> matcherFactory = new BasicSkillMatcherFactory(skillCalculator);
+		AbstractMatcherFactory<PlayerComponent> matcherFactory = new SimpleSkillBasedMatcherFactory(skillCalculator);
 		Matcher<PlayerComponent> matcher = matcherFactory.createMatcher();
 		
 		// Finally, assemble the Matchmaker

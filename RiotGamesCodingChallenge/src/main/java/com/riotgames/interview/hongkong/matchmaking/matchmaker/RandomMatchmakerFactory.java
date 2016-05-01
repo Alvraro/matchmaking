@@ -10,6 +10,13 @@ import com.riotgames.interview.hongkong.matchmaking.skill.AbstractSkillCalculato
 import com.riotgames.interview.hongkong.matchmaking.skill.RandomSkillCalculatorFactory;
 import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
+/** 
+ * MatchmakerFactory that creates a naive Matchmaker that uses:
+ * - RandomMatcher for random similarities
+ * - RandomSkillCalculator for random skill estimations
+ * 
+ * Useful for benchmarking purposes.
+ */
 public class RandomMatchmakerFactory implements AbstractMatchmakerFactory {
 
 	private Random random;

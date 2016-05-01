@@ -8,9 +8,10 @@ import java.util.Random;
 import com.riotgames.interview.hongkong.matchmaking.Match;
 import com.riotgames.interview.hongkong.matchmaking.PlayerFormatException;
 import com.riotgames.interview.hongkong.matchmaking.SampleData;
-import com.riotgames.interview.hongkong.matchmaking.matchmaker.DefaultMatchmakerFactory;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.SimpleSkillBasedMatchmakerFactory;
 import com.riotgames.interview.hongkong.matchmaking.matchmaker.Matchmaker;
 import com.riotgames.interview.hongkong.matchmaking.matchmaker.RandomMatchmakerFactory;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.WeightedScoringMatchmakerFactory;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 import com.riotgames.interview.hongkong.matchmaking.stats.StatsExtractor;
 
@@ -41,19 +42,24 @@ public class Simulator {
 		// Initialize pseudo-random number generator
 		Random random = new Random(System.currentTimeMillis());
 
+		// Create and simulate random matchmaker
+		Matchmaker matchmaker = new RandomMatchmakerFactory(random).createMatchMaker();
+		Simulator simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
+		simulator.execute(NUM_MATCHES, System.out, random);
+		
 		// Create and simulate default matchmaker without special preference for long queued players
-		Matchmaker defaultMatchmaker = new DefaultMatchmakerFactory(false).createMatchMaker();
-		Simulator simulator = new Simulator(defaultMatchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
+		matchmaker = new SimpleSkillBasedMatchmakerFactory(false).createMatchMaker();
+		simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
 		simulator.execute(NUM_MATCHES, System.out, random);
 
 		// Create and simulate default matchmaker with special preference for long queued players 
-		Matchmaker defaultMatchmakerLongQueued = new DefaultMatchmakerFactory(true).createMatchMaker();
-		simulator = new Simulator(defaultMatchmakerLongQueued, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
+		matchmaker = new SimpleSkillBasedMatchmakerFactory(true).createMatchMaker();
+		simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
 		simulator.execute(NUM_MATCHES, System.out, random);
 		
-		// Create and simulate random matchmaker
-		Matchmaker randomMatchmaker = new RandomMatchmakerFactory(random).createMatchMaker();
-		simulator = new Simulator(randomMatchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
+		// Create and simulate Weighted 
+		matchmaker = new WeightedScoringMatchmakerFactory().createMatchMaker();
+		simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
 		simulator.execute(NUM_MATCHES, System.out, random);
 	}
 

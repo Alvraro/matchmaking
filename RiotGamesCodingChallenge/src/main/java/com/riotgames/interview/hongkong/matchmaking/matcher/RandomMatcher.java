@@ -9,7 +9,7 @@ import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
  * */
 public class RandomMatcher implements Matcher<PlayerComponent> {
 
-	private Random random;
+	private final Random random;
 
 	public RandomMatcher(Random random) {
 		this.random = random;

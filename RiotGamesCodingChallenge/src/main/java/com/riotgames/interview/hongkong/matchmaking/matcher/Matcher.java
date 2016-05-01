@@ -1,7 +1,8 @@
 package com.riotgames.interview.hongkong.matchmaking.matcher;
 
 /**
- * Matching algorithm. Calculates a similarity score between two objects 
+ * Matching algorithm. Calculates a similarity score between two objects.
+ * The higher the score is, the stronger the similarity is 
  * */
 public interface Matcher<T> {
 
