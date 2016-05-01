@@ -14,14 +14,21 @@ public class PlayerComponentPair implements Comparable<PlayerComponentPair>{
 		this.similarity = similarity;
 	}
 
+	/** Get one of the paired players */
 	public PlayerComponent getOne() {
 		return one;
 	}
 
+	/** Get the other one of the paired players */
 	public PlayerComponent getAnother() {
 		return another;
 	}
 
+	/** Get similarity between players */
+	public double getSimilarity(){
+		return similarity;
+	}
+	
 	@Override
 	public int compareTo(PlayerComponentPair o) {
 		/** Inverted default natural order which is from min to max */

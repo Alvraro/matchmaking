@@ -1,6 +1,7 @@
 package com.riotgames.interview.hongkong.matchmaking;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -302,6 +303,76 @@ public class MatchmakerTest {
 		}
 	}
 
+	/** Test 2v2 FindMatch using longestQueued preference */
+	@Test
+	public void testFindMatch2v2LongestQueued() {
+		try{
+			// Arbitrary number of basic players
+			int numBasicPlayers = 10;
+			
+			// Arbitrary number of players per game
+			int playersPerGame = 2;
+			
+			// Create matchmaker
+			Matchmaker matchmakerWithPref = new DefaultMatchmakerFactory(true).createMatchMaker();
+
+			// Create and enter the first (and so, the oldest) player with a certain skill
+			String oldestPlayerName = "oldestPlayer";
+			Player oldestPlayer = new Player(oldestPlayerName, 100, 0);
+			matchmakerWithPref.enterMatchmaking(oldestPlayer); //skill = 100/100 = 1
+			
+			// Wait a little bit, please, otherwise players will have the same age!
+			Thread.sleep(100);
+			
+			// Create and enter some basic players with different skill from oldest player's
+			String basicPlayerName = "basicPlayer";
+			for(int i=0; i<numBasicPlayers; ++i)
+				matchmakerWithPref.enterMatchmaking(new Player(basicPlayerName, 100, 100)); // skill 100/200 = 0.5
+			
+			// Find match of an arbitrary size
+			Match matchFound = matchmakerWithPref.findMatch(playersPerGame);
+			assertNotNull(matchFound);
+			
+			Set<Player> team1 = matchFound.getTeam1();
+			Set<Player> team2 = matchFound.getTeam2();
+			
+			assertTrue(team1!=null && team1.size()==playersPerGame && team2!=null && team2.size()==playersPerGame);
+
+			// Oldest player should have been chosen first for team1, even if it there are other better pairs (i.e. ALL basicPlayers)
+			assertTrue(team1.contains(oldestPlayer));
+				
+			// Repeat everything WITHOUT longestQueuedPlayer preference
+			
+			// Create matchmaker
+			Matchmaker matchmakerWithoutPref = new DefaultMatchmakerFactory(false).createMatchMaker();
+
+			// Create and enter the first (and so, the oldest) player with a certain skill
+			oldestPlayer = new Player(oldestPlayerName, 100, 0);
+			matchmakerWithoutPref.enterMatchmaking(oldestPlayer); //skill = 100/100 = 1
+			
+			// Create and enter some basic players with different skill from oldest player's
+			for(int i=0; i<numBasicPlayers; ++i)
+				matchmakerWithoutPref.enterMatchmaking(new Player(basicPlayerName, 100, 100)); // skill 100/200 = 0.5
+			
+			// Find match of an arbitrary size
+			matchFound = matchmakerWithoutPref.findMatch(playersPerGame);
+			assertNotNull(matchFound);
+			
+			team1 = matchFound.getTeam1();
+			team2 = matchFound.getTeam2();
+			
+			assertTrue(team1!=null && team1.size()==playersPerGame && team2!=null && team2.size()==playersPerGame);
+
+			// Oldest player should have NOT been chosen as there are other better pairs (i.e. ALL basicPlayers)
+			assertFalse(team1.contains(oldestPlayer));
+			assertFalse(team2.contains(oldestPlayer));
+			
+		} catch(Exception e){
+			e.printStackTrace();
+			fail("No exceptions allowed! >_<: " + e);
+		}
+	}
+	
 	/** 
 	 * Test several basic FindMatch in a row WITHOUT concurrency and a perfect match 
 	 * */

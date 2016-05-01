@@ -81,6 +81,7 @@ public class MatchmakerImpl implements Matchmaker {
 			}
 	
 			// Initialize teams
+			// TODO If more flexibility is desirable bring this stuff to a new AbstractFactory schema 
 			PlayerTeam team1 = new PlayerTeam(playersPerTeam);
 			PlayerTeam team2 = new PlayerTeam(playersPerTeam);
 			long matchmakingStartTime = System.currentTimeMillis();
@@ -93,14 +94,49 @@ public class MatchmakerImpl implements Matchmaker {
 				// Add it to one team
 				team1.addPlayerComponent(longestQueuedPlayer);
 
-				// TODO Find its best match
-				/*PlayerComponent bestMatch = Collections.max(playerBase, new Comparator<PlayerComponent>() {
-					
-				});*/
+				// Find its best match
+				// We can do it so by:
+				// - Recalculating similarities: N matcher (potentially CPU cost expensive) evaluations
+				// - Traversing cached similarities in the PriorityQueue: N^2 node visits (as PQ doesn't provide ordered traversing)
+				// It's not clear which is the best way but finding the best is way more clearer :D
+				// (and this is done only once so don't spend too much time thinking here :p)
+				PlayerComponent bestMatch = null;
+				double bestSimilarity = Double.NEGATIVE_INFINITY;
+				
+				// For each pair of players with similarity
+				for(PlayerComponentPair pair : similarities){
+					// If longestQueuedPlayer is present
+					if(pair.getOne() == longestQueuedPlayer || pair.getAnother() == longestQueuedPlayer){
+						double similarity = pair.getSimilarity();
+						PlayerComponent one = pair.getOne();
+						PlayerComponent another = pair.getAnother();
+						
+						// If it has better similarity
+						if(similarity > bestSimilarity){
+							// Update best similarity
+							bestSimilarity = similarity;
+							
+							// Update bestMatch (to the other player in the pair)
+							bestMatch = (one == longestQueuedPlayer) ? another : one;
+						}
+					}
+				}
+				
+				// Health check
+				if(bestMatch != null){
+					// Add it to team2
+					team2.addPlayerComponent(bestMatch);
+				}
+
+				// Check what you are doing wrong but proceed as if this had never happened o_O
+				else{
+					logger.severe("Player longestQueuedPlayer has not any similarities. Please check logic :(");
+					team1 = new PlayerTeam(playersPerTeam);
+				}
 			}
 			
-			// While teams are not completed (we are filling both at the same time so we just need to check one)
-			while(team1.getChildren().size() < playersPerTeam){
+			// While teams are not completed (we are filling both at the same time so we just need to check one) and there are similarities
+			while((team1.getChildren().size() < playersPerTeam) && (similarities.size() > 0)){
 				// Choose the 2 most similar players
 				PlayerComponentPair bestMatch = similarities.poll();
 				
@@ -139,13 +175,20 @@ public class MatchmakerImpl implements Matchmaker {
 				highestTeam.addPlayerComponent(lowestPlayer);
 				lowesTeam.addPlayerComponent(highestPlayer);
 			}
-				
+			
+			// Health check
+			if(team1.getChildren().size() != playersPerTeam || team2.getChildren().size() != playersPerTeam){
+				// Something went really wrong :|
+				logger.severe("Matchmaking finished but teams are not completed. Please check logic :(");
+				return null;
+			}
+			
 			// Remove matched players from the player base
 			playerBase.removeAll(team1.getChildren());
 			playerBase.removeAll(team2.getChildren());
 			
 			// Deliver match! \m/
-			return new Match(team1.getChildrenPlayers(), team2.getChildrenPlayers(), matchmakingStartTime ,System.currentTimeMillis());
+			return new Match(team1.getChildrenPlayers(), team2.getChildrenPlayers(), matchmakingStartTime, System.currentTimeMillis());
 		} 
 		
 		catch(Exception e){
