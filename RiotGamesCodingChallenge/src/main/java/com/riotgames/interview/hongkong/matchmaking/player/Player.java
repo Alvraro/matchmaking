@@ -29,7 +29,7 @@ public class Player extends PlayerComponent {
 	public final static long MAX_LOSSES = 1000000; // 1.000.000 losses? REALLY? Pls uninstall! :D
 	
 	/** Global ID counter to assign players an unique ID */
-	private static int nextId=0;
+	private static int nextId=1;
 
 	/** Player's unique ID */
 	private final int id;
@@ -70,6 +70,22 @@ public class Player extends PlayerComponent {
 		this(p.name, p.wins, p.losses);
 	}
 
+    /** A PlayerTeam is hashed by its player set */
+    @Override
+    public int hashCode() {
+    	return id;
+    }
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof Player))
+			return false;
+		
+		// ID is unique
+		return
+				id == ((Player)obj).id;
+	}
+    
 	/** Perform integrity/profanity checks over the player's name */
 	private void checkName(String name) throws PlayerFormatException {
 		if(name == null)
@@ -111,11 +127,6 @@ public class Player extends PlayerComponent {
     @Override
     public long getLosses() {
         return losses;
-    }
-
-    @Override
-    public int hashCode() {
-    	return id;
     }
 
     @Override

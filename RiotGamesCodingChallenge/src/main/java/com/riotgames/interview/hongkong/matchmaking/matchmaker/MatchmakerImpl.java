@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.riotgames.interview.hongkong.matchmaking.Match;
+import com.riotgames.interview.hongkong.matchmaking.MatchmakingException;
 import com.riotgames.interview.hongkong.matchmaking.PlayerComponentPair;
 import com.riotgames.interview.hongkong.matchmaking.matcher.Matcher;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
@@ -79,70 +80,26 @@ public class MatchmakerImpl implements Matchmaker {
 				logger.warning((2 * playersPerTeam) + " players are needed to start a "+playersPerTeam+"v"+playersPerTeam+" game and there are only "+playerBase.size());
 				return null;
 			}
-	
-			// Initialize teams
-			// TODO If more flexibility is desirable bring this stuff to a new AbstractFactory schema 
-			PlayerTeam team1 = new PlayerTeam(playersPerTeam);
-			PlayerTeam team2 = new PlayerTeam(playersPerTeam);
+
+			// Consider matchmaking started!
 			long matchmakingStartTime = System.currentTimeMillis();
-			
-			// If there is preference for longest queued players
-			if(longQueuedPreference){
-				// Choose player queued for longest to avoid the possibility of infinite queue staying!
-				PlayerComponent longestQueuedPlayer = playerBase.getLongestQueuedPlayer();
-				
-				// Add it to one team
-				team1.addPlayerComponent(longestQueuedPlayer);
+		
+			// Initialize teams
+			InitialTeams initialTeams = initializeTeams(playersPerTeam);
+			PlayerTeam team1 = initialTeams.getTeam1();
+			PlayerTeam team2 = initialTeams.getTeam2();
 
-				// Find its best match
-				// We can do it so by:
-				// - Recalculating similarities: N matcher (potentially CPU cost expensive) evaluations
-				// - Traversing cached similarities in the PriorityQueue: N^2 node visits (as PQ doesn't provide ordered traversing)
-				// It's not clear which is the best way but finding the best is way more clearer :D
-				// (and this is done only once so don't spend too much time thinking here :p)
-				PlayerComponent bestMatch = null;
-				double bestSimilarity = Double.NEGATIVE_INFINITY;
-				
-				// For each pair of players with similarity
-				for(PlayerComponentPair pair : similarities){
-					// If longestQueuedPlayer is present
-					if(pair.getOne() == longestQueuedPlayer || pair.getAnother() == longestQueuedPlayer){
-						double similarity = pair.getSimilarity();
-						PlayerComponent one = pair.getOne();
-						PlayerComponent another = pair.getAnother();
-						
-						// If it has better similarity
-						if(similarity > bestSimilarity){
-							// Update best similarity
-							bestSimilarity = similarity;
-							
-							// Update bestMatch (to the other player in the pair)
-							bestMatch = (one == longestQueuedPlayer) ? another : one;
-						}
-					}
-				}
-				
-				// Health check
-				if(bestMatch != null){
-					// Add it to team2
-					team2.addPlayerComponent(bestMatch);
-				}
-
-				// Check what you are doing wrong but proceed as if this had never happened o_O
-				else{
-					logger.severe("Player longestQueuedPlayer has not any similarities. Please check logic :(");
-					team1 = new PlayerTeam(playersPerTeam);
-				}
-			}
-			
 			// While teams are not completed (we are filling both at the same time so we just need to check one) and there are similarities
 			while((team1.getChildren().size() < playersPerTeam) && (similarities.size() > 0)){
 				// Choose the 2 most similar players
-				PlayerComponentPair bestMatch = similarities.poll();
+				PlayerComponentPair bestMatchPair = similarities.poll();
 				
-				// Ignore match if any of the players is already assigned to a team
+				// Ignore match if any of the players is already assigned to a team or is no longer present in the playerBase
 				// Doing this we do no have to traverse similarity matrix to remove appearances of a player when he/she's matched
-				if(bestMatch.getOne().getTeamAssigned() != null || bestMatch.getAnother().getTeamAssigned() != null){
+				if(
+						bestMatchPair.getOne().getTeamAssigned() != null || !playerBase.getPlayers().contains(bestMatchPair.getOne()) ||
+						bestMatchPair.getAnother().getTeamAssigned() != null || !playerBase.getPlayers().contains(bestMatchPair.getAnother())){
+					
 					continue;
 				}
 				
@@ -161,13 +118,13 @@ public class MatchmakerImpl implements Matchmaker {
 				// And do the same for players
 				PlayerComponent highestPlayer;
 				PlayerComponent lowestPlayer;
-				if(skillCalculator.getSkill(bestMatch.getOne()) > skillCalculator.getSkill(bestMatch.getAnother())){
-					highestPlayer = bestMatch.getOne();
-					lowestPlayer = bestMatch.getAnother();
+				if(skillCalculator.getSkill(bestMatchPair.getOne()) > skillCalculator.getSkill(bestMatchPair.getAnother())){
+					highestPlayer = bestMatchPair.getOne();
+					lowestPlayer = bestMatchPair.getAnother();
 				}
 				else{
-					highestPlayer = bestMatch.getAnother();
-					lowestPlayer = bestMatch.getOne();			
+					highestPlayer = bestMatchPair.getAnother();
+					lowestPlayer = bestMatchPair.getOne();			
 				}
 				
 				// Put them in different yet balanced teams
@@ -195,6 +152,69 @@ public class MatchmakerImpl implements Matchmaker {
 			logger.log(Level.SEVERE, "Error in findMatch", e);
 			return null;
 		}
+	}
+
+	/**
+	 * This function returns initial teams. Depending on the matchmaker configuration this can be simply a pair of empty teams 
+	 */
+	// TODO If more flexibility is desirable bring this stuff to a new AbstractFactory schema 
+	private InitialTeams initializeTeams(int playersPerTeam) throws MatchmakingException {
+		PlayerTeam team1 = new PlayerTeam(playersPerTeam);
+		PlayerTeam team2 = new PlayerTeam(playersPerTeam);
+		
+		// If there is preference for longest queued players
+		if(longQueuedPreference){
+			// Choose player queued for longest to avoid the possibility of infinite queue staying!
+			PlayerComponent longestQueuedPlayer = playerBase.getLongestQueuedPlayer();
+			
+			// Add it to one team
+			team1.addPlayerComponent(longestQueuedPlayer);
+
+			// Find its best match
+			// We can do it so by:
+			// - Recalculating similarities: N matcher (potentially CPU cost expensive) evaluations
+			// - Traversing cached similarities in the PriorityQueue: N^2 node visits (as PQ doesn't provide ordered traversing)
+			// It's not clear which is the best way but finding the best is way more clearer :D
+			// (and this is done only once so don't spend too much time thinking here :p)
+			PlayerComponent bestMatch = null;
+			double bestSimilarity = Double.NEGATIVE_INFINITY;
+			
+			// For each pair of players with similarity
+			for(PlayerComponentPair pair : similarities){
+				// If one of the players is longestQueuedPlayer and the other is present on the playerBase (note we don't need to check longestQueuedPlayer)
+				if(
+						(pair.getOne() == longestQueuedPlayer && playerBase.getPlayers().contains(pair.getAnother())) ||
+						(pair.getAnother() == longestQueuedPlayer && playerBase.getPlayers().contains(pair.getOne()))){
+
+					double similarity = pair.getSimilarity();
+					PlayerComponent one = pair.getOne();
+					PlayerComponent another = pair.getAnother();
+					
+					// If it has better similarity
+					if(similarity > bestSimilarity){
+						// Update best similarity
+						bestSimilarity = similarity;
+						
+						// Update bestMatch (to the other player in the pair)
+						bestMatch = (one == longestQueuedPlayer) ? another : one;
+					}
+				}
+			}
+			
+			// Health check
+			if(bestMatch != null){
+				// Add it to team2
+				team2.addPlayerComponent(bestMatch);
+			}
+
+			// Check what you are doing wrong but proceed as if this had never happened o_O
+			else{
+				logger.severe("Player longestQueuedPlayer has not any similarities. Please check logic :(");
+				team1 = new PlayerTeam(playersPerTeam);
+			}
+		}
+		
+		return new InitialTeams(team1, team2);
 	}
 
 	public synchronized void enterMatchmaking(Player newPlayer) {

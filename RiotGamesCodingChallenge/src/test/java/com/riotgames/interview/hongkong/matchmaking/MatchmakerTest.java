@@ -225,22 +225,24 @@ public class MatchmakerTest {
 			match = matchmaker.findMatch(1);
 			assertNull(match);
 			
-		} catch (PlayerFormatException e){
+		} catch (Exception e){
 			fail("No exceptions allowed! >_<" + e);
 		}
 	}
 	
-	/** Stress test */
+	/** Stress test for different Matchmaker configurations */
 	@Test
 	public void testStress() {
-		Matchmaker matchmaker;
 		try {
-			matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+			testStress(new DefaultMatchmakerFactory(true).createMatchMaker());
+			testStress(new DefaultMatchmakerFactory(false).createMatchMaker());
 		} catch (Exception e) {
-			fail("Can't instantiate Matchmaker: " + e.getMessage());
+			fail("No exceptions allowed! >_<" + e);
 			return;
 		}
-
+	}
+	
+	public void testStress(Matchmaker matchmaker) {
 		try{
 			String commonPlayerName = "Apocalypse";
 

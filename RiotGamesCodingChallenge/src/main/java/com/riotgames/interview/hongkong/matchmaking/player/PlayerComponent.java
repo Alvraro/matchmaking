@@ -33,4 +33,12 @@ public abstract class PlayerComponent {
 
 	/** Get oldest matchmaking enter time */
 	public abstract Long getOldestMatchmakingEnterTime();
+	
+	/** Explicit hashCode implementation is mandatory */
+	@Override
+	public abstract int hashCode();
+	
+	/** Explicit equals implementation is mandatory */
+	@Override
+	public abstract boolean equals(Object obj);
 }

@@ -27,6 +27,20 @@ public class PlayerTeam extends PlayerComponent {
 		children = new HashSet<PlayerComponent>(initialSize);
 	}
 	
+   /** A PlayerTeam is hashed by its player set */
+	@Override
+	public int hashCode() {
+		return children.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof PlayerTeam))
+			return false;
+		
+		return children.equals(((PlayerTeam)obj).children);
+	}
+	
 	/** Adds a new PlayerComponent as child of this aggregate */
 	public boolean addPlayerComponent(PlayerComponent newPlayerComponent) throws MatchmakingException {
 		if(children.contains(newPlayerComponent)){

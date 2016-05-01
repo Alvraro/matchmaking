@@ -20,7 +20,7 @@ public class Simulator {
 	private static final int PLAYER_BASE_SIZE = 100;
 	
 	/** Number of matches to generate */
-	private static final int NUM_MATCHES = 10000;
+	private static final int NUM_MATCHES = 5000;
 
 	/** Matchmaker to simulate */
 	private Matchmaker matchmaker;
