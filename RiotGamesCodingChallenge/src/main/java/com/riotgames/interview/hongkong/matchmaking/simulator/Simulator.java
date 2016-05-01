@@ -69,6 +69,9 @@ public class Simulator {
 		
 		// Shuffle it
 		Collections.shuffle(playerReserve);
+
+		// Simulation start
+		long simulationStart = System.currentTimeMillis();
 		
 		// Take initial number of random players from the reserve to enter the matchmaker
 		for(int i=0; i<playerBaseSize; ++i){
@@ -105,6 +108,10 @@ public class Simulator {
 			// Shuffle the reserve
 			Collections.shuffle(playerReserve);
 		}
+		
+		// Simulation start
+		long simulationEnd = System.currentTimeMillis();
+		statsExtractor.registerSimulationTime(simulationEnd - simulationStart);
 		
 		// Print simulation stats
 		statsExtractor.printStats(out, false);

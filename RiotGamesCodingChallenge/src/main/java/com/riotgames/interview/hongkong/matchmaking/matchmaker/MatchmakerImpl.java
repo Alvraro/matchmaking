@@ -79,6 +79,9 @@ public class MatchmakerImpl implements Matchmaker {
 			// Initialize teams
 			PlayerTeam team1 = new PlayerTeam(playersPerTeam);
 			PlayerTeam team2 = new PlayerTeam(playersPerTeam);
+			long matchmakingStartTime = System.currentTimeMillis();
+			
+			// TODO Choose oldest player in queue to avoid infinite queue staying!
 			
 			// While teams are not completed (we are filling both at the same time so we just need to check one)
 			while(team1.getChildren().size() < playersPerTeam){
@@ -126,7 +129,7 @@ public class MatchmakerImpl implements Matchmaker {
 			playerBase.removeAll(team2.getChildren());
 			
 			// Deliver match! \m/
-			return new Match(team1.getChildrenPlayers(), team2.getChildrenPlayers());
+			return new Match(team1.getChildrenPlayers(), team2.getChildrenPlayers(), matchmakingStartTime ,System.currentTimeMillis());
 		} 
 		
 		catch(Exception e){

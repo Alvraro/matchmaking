@@ -43,8 +43,11 @@ public class Player extends PlayerComponent {
     /** Player's losses */
     private final long losses;
 
-    /** Time at which the player enters the match making */
+    /** Time at which the player enters the matchmaking system */
 	private Long matchmakingEnterTime;
+
+    /** Time at which the player exits the matchmaking system because he/she was assigned to a Match */
+	private long matchmakingExitTime;
 
     /** Basic constructor */
     public Player(String name, long wins, long losses) throws PlayerFormatException {
@@ -67,6 +70,7 @@ public class Player extends PlayerComponent {
 		this(p.name, p.wins, p.losses);
 	}
 
+	/** Perform integrity/profanity checks over the player's name */
 	private void checkName(String name) throws PlayerFormatException {
 		if(name == null)
 			throw new PlayerFormatException(this, "Name can't be null");
@@ -77,6 +81,7 @@ public class Player extends PlayerComponent {
 		// TODO If player names are created here, check profanity!
 	}
 
+	/** Perform integrity checks over the player's number of wins */
 	private void checkWins(long wins) throws PlayerFormatException {
 		if(wins < 0)
 			throw new PlayerFormatException(this, "Wins can't be negative");
@@ -85,6 +90,7 @@ public class Player extends PlayerComponent {
 			throw new PlayerFormatException(this, "Wins can't be over " + MAX_WINS);
 	}
 	
+	/** Perform integrity checks over the player's number of losses */
     private void checkLosses(long losses) throws PlayerFormatException {
 		if(losses < 0)
 			throw new PlayerFormatException(this, "Losses can't be negative");
@@ -118,6 +124,14 @@ public class Player extends PlayerComponent {
 
 	public void setMatchmakingEnterTime(long matchmakingEnterTime) {
 		this.matchmakingEnterTime = matchmakingEnterTime;
+	}
+	
+	public Long getMatchmakingExitTime() {
+		return matchmakingExitTime;
+	}
+
+	public void setMatchmakingExitTime(long matchmakingExitTime) {
+		this.matchmakingExitTime = matchmakingExitTime;
 	}
 
 	@Override

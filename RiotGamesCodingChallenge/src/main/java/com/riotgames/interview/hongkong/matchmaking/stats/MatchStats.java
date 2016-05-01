@@ -37,4 +37,18 @@ public class MatchStats {
 				(Math.abs(team1Stats.getMaxVictoryRate() - team2Stats.getMinVictoryRate())) +
 				(Math.abs(team2Stats.getMaxVictoryRate() - team1Stats.getMinVictoryRate())) / 2;
 	}
+	
+	/** Returns average time stayed in the queue for all players in the match.
+	 * Queue time is considered here as time since player entered matchmaker until he/she was assigned a match. 
+	 *  */
+	public double getAvgQueueTime() {
+		return (team1Stats.getAvgQueueTime() + team2Stats.getAvgQueueTime()) / 2;
+	}
+
+	/** Returns max time stayed in the queue for all players in the match.
+	 * Queue time is considered here as time since player entered matchmaker until he/she was assigned a match. 
+	 *  */
+	public double getMaxQueueTime() {
+		return Math.max(team1Stats.getMaxQueueTime(), team2Stats.getMaxQueueTime());
+	}
 }
