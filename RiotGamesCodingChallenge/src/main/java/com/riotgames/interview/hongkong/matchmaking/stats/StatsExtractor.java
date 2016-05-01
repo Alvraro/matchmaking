@@ -69,7 +69,7 @@ public class StatsExtractor {
 			
 			avgVictoryRate += victoryRate;
 			
-			double queueTime = player.getMatchmakingExitTime() - player.getMatchmakingEnterTime();
+			double queueTime = player.getMatchmakingExitTime() - player.getOldestMatchmakingEnterTime();
 			
 			if(queueTime > maxQueueTime)
 				maxQueueTime = queueTime;

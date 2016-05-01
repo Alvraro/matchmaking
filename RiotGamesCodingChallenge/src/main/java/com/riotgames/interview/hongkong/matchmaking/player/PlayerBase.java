@@ -30,4 +30,20 @@ public class PlayerBase {
 	public synchronized void add(Player newPlayer) {
 		players.add(newPlayer);
 	}
+
+	/** Find longest queued player on the playerBase */
+	public PlayerComponent getLongestQueuedPlayer() {
+		PlayerComponent longestQueuedPlayer = null;
+		long oldestMatchmakingEnterTime = Long.MAX_VALUE;
+		
+		for(PlayerComponent player : players){
+			Long playerMatchmakingEnterTime = player.getOldestMatchmakingEnterTime();
+			if(playerMatchmakingEnterTime < oldestMatchmakingEnterTime){
+				oldestMatchmakingEnterTime = playerMatchmakingEnterTime;
+				longestQueuedPlayer = player;
+			}
+		}
+		
+		return longestQueuedPlayer;
+	}
 }

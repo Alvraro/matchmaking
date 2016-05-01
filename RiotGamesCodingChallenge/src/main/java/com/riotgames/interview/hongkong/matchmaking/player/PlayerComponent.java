@@ -30,4 +30,7 @@ public abstract class PlayerComponent {
 
 	/** Get all children Player objects contained: N for a PlayerTeam, 1 for a single Player */
 	public abstract HashSet<Player> getChildrenPlayers();
+
+	/** Get oldest matchmaking enter time */
+	public abstract Long getOldestMatchmakingEnterTime();
 }

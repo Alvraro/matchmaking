@@ -42,10 +42,19 @@ public class Simulator {
 		Random random = new Random(System.currentTimeMillis());
 
 		// Create default matchmaker
-		Matchmaker defaultMatchmaker = new DefaultMatchmakerFactory().createMatchMaker();
+		Matchmaker defaultMatchmaker = new DefaultMatchmakerFactory(false).createMatchMaker();
 
 		// Create simulator
 		Simulator simulator = new Simulator(defaultMatchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
+		
+		// Execute
+		simulator.execute(NUM_MATCHES, System.out, random);
+
+		// Create default matchmaker with special preference for long queued players 
+		Matchmaker defaultMatchmakerLongQueued = new DefaultMatchmakerFactory(true).createMatchMaker();
+
+		// Create simulator
+		simulator = new Simulator(defaultMatchmakerLongQueued, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
 		
 		// Execute
 		simulator.execute(NUM_MATCHES, System.out, random);

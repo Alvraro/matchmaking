@@ -47,7 +47,7 @@ public class Player extends PlayerComponent {
 	private Long matchmakingEnterTime;
 
     /** Time at which the player exits the matchmaking system because he/she was assigned to a Match */
-	private long matchmakingExitTime;
+	private Long matchmakingExitTime;
 
     /** Basic constructor */
     public Player(String name, long wins, long losses) throws PlayerFormatException {
@@ -118,11 +118,16 @@ public class Player extends PlayerComponent {
     	return id;
     }
 
+    @Override
+	public Long getOldestMatchmakingEnterTime() {
+		return getMatchmakingEnterTime();
+	}
+
 	public Long getMatchmakingEnterTime() {
 		return matchmakingEnterTime;
 	}
-
-	public void setMatchmakingEnterTime(long matchmakingEnterTime) {
+    
+	public void setMatchmakingEnterTime(Long matchmakingEnterTime) {
 		this.matchmakingEnterTime = matchmakingEnterTime;
 	}
 	
@@ -130,7 +135,7 @@ public class Player extends PlayerComponent {
 		return matchmakingExitTime;
 	}
 
-	public void setMatchmakingExitTime(long matchmakingExitTime) {
+	public void setMatchmakingExitTime(Long matchmakingExitTime) {
 		this.matchmakingExitTime = matchmakingExitTime;
 	}
 

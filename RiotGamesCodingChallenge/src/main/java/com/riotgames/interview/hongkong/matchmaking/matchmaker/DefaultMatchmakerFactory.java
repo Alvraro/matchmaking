@@ -10,6 +10,18 @@ import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
 public class DefaultMatchmakerFactory implements AbstractMatchmakerFactory {
 
+	/** Special preference for long queued players */
+	private boolean longQueuedPreference;
+
+	public DefaultMatchmakerFactory() {
+		this(false);
+	}
+
+	/** Creates factory with given special preference for long queued players */
+	public DefaultMatchmakerFactory(boolean longQueuedPreference) {
+		this.longQueuedPreference = longQueuedPreference;
+	}
+
 	@Override
 	public Matchmaker createMatchMaker() {
 		// Create a SkillCalculator to calculate player skills
@@ -21,7 +33,7 @@ public class DefaultMatchmakerFactory implements AbstractMatchmakerFactory {
 		Matcher<PlayerComponent> matcher = matcherFactory.createMatcher();
 		
 		// Finally, assemble the Matchmaker
-		return new MatchmakerImpl(skillCalculator, matcher);
+		return new MatchmakerImpl(skillCalculator, matcher, longQueuedPreference);
 	}
 
 }

@@ -92,4 +92,18 @@ public class PlayerTeam extends PlayerComponent {
 		return "PlayerTeam [averageWins=" + averageWins + ", averageLosses=" + averageLosses + ", children=" + children	+ "]";
 	}
 
+	@Override
+	public Long getOldestMatchmakingEnterTime() {
+		long oldestTime = Long.MAX_VALUE;
+		
+		// For each PlayerComponent child
+		for(PlayerComponent child : children){
+			Long childOldestTime = child.getOldestMatchmakingEnterTime();
+			if(childOldestTime < oldestTime)
+				oldestTime = childOldestTime; 
+		}
+		
+		return oldestTime;
+	}
+
 }

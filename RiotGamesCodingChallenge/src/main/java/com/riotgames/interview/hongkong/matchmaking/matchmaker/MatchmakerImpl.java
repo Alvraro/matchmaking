@@ -37,11 +37,14 @@ public class MatchmakerImpl implements Matchmaker {
 
 	/** Cached similarities between player pairs */ 
 	private PriorityQueue<PlayerComponentPair> similarities;
+
+	/** Flag set to true if long queued players should have preference */
+	private boolean longQueuedPreference;
 	
 	/** Logger for printing stuff */
 	private static Logger logger = Logger.getLogger(MatchmakerImpl.class.toString());
 	
-	public MatchmakerImpl(SkillCalculator<PlayerComponent> skillCalculator, Matcher<PlayerComponent> matcher) {
+	public MatchmakerImpl(SkillCalculator<PlayerComponent> skillCalculator, Matcher<PlayerComponent> matcher, boolean longQueuedPreference) {
 		playerBase = new PlayerBase();
 		
 		similarities = new PriorityQueue<PlayerComponentPair>();
@@ -52,6 +55,7 @@ public class MatchmakerImpl implements Matchmaker {
 		
 		this.matcher = matcher;
 		this.skillCalculator = skillCalculator;
+		this.longQueuedPreference = longQueuedPreference;
 	}
 
 	public synchronized Match findMatch(int playersPerTeam) {
@@ -81,7 +85,19 @@ public class MatchmakerImpl implements Matchmaker {
 			PlayerTeam team2 = new PlayerTeam(playersPerTeam);
 			long matchmakingStartTime = System.currentTimeMillis();
 			
-			// TODO Choose oldest player in queue to avoid infinite queue staying!
+			// If there is preference for longest queued players
+			if(longQueuedPreference){
+				// Choose player queued for longest to avoid the possibility of infinite queue staying!
+				PlayerComponent longestQueuedPlayer = playerBase.getLongestQueuedPlayer();
+				
+				// Add it to one team
+				team1.addPlayerComponent(longestQueuedPlayer);
+
+				// TODO Find its best match
+				/*PlayerComponent bestMatch = Collections.max(playerBase, new Comparator<PlayerComponent>() {
+					
+				});*/
+			}
 			
 			// While teams are not completed (we are filling both at the same time so we just need to check one)
 			while(team1.getChildren().size() < playersPerTeam){
@@ -169,7 +185,8 @@ public class MatchmakerImpl implements Matchmaker {
 
 	@Override
 	public String toString() {
-		return "MatchmakerImpl [matcher=" + matcher + ", skillCalculator=" + skillCalculator + "]";
+		return "MatchmakerImpl [matcher=" + matcher + ", skillCalculator=" + skillCalculator + ", longQueuedPreference="
+				+ longQueuedPreference + "]";
 	}
 	
 }

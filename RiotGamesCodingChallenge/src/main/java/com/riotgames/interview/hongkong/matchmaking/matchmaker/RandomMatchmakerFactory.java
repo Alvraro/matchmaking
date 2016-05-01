@@ -29,7 +29,7 @@ public class RandomMatchmakerFactory implements AbstractMatchmakerFactory {
 		Matcher<PlayerComponent> matcher = matcherFactory.createMatcher();
 		
 		// Finally, assemble the matchmaker
-		return new MatchmakerImpl(skillCalculator, matcher);
+		return new MatchmakerImpl(skillCalculator, matcher, false);
 	}
 
 }
