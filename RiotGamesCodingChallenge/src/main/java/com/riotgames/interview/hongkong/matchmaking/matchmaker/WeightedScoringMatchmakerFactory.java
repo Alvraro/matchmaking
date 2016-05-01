@@ -14,7 +14,7 @@ import com.riotgames.interview.hongkong.matchmaking.skill.BasicSkillCalculatorFa
 import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
 /** 
- * MatchmakerFactory that creates an experimental Matchmaker that uses:
+ * MatchmakerFactory that creates an experimental Matchmaker featuring:
  * - WeightedScoringMatcher that combines different scores to calculate similarities
  * - BasicSkillCalculator for basic skill estimations based on win/loss ratio
  * 
@@ -22,7 +22,7 @@ import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
  */
 public class WeightedScoringMatchmakerFactory implements AbstractMatchmakerFactory {
 	/** Path to the Matchmaker's configuration file */
-	private static final String CONFIG_FILE = "src/main/resources/WeightedScoringMatchmaker.properties";
+	private static final String CONFIG_FILE = "src/main/resources/WeightedScoringMatchmakerFactory.properties";
 
 	/** Configuration properties */
 	private Properties properties;

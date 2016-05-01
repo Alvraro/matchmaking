@@ -12,8 +12,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.riotgames.interview.hongkong.matchmaking.matchmaker.SimpleSkillBasedMatchmakerFactory;
 import com.riotgames.interview.hongkong.matchmaking.matchmaker.Matchmaker;
+import com.riotgames.interview.hongkong.matchmaking.matchmaker.SimpleSkillBasedMatchmakerFactory;
 import com.riotgames.interview.hongkong.matchmaking.player.Player;
 
 public class MatchmakerTest {

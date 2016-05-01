@@ -1,15 +1,15 @@
 package com.riotgames.interview.hongkong.matchmaking.matchmaker;
 
 import com.riotgames.interview.hongkong.matchmaking.matcher.AbstractMatcherFactory;
-import com.riotgames.interview.hongkong.matchmaking.matcher.SimpleSkillBasedMatcherFactory;
 import com.riotgames.interview.hongkong.matchmaking.matcher.Matcher;
+import com.riotgames.interview.hongkong.matchmaking.matcher.SimpleSkillBasedMatcherFactory;
 import com.riotgames.interview.hongkong.matchmaking.player.PlayerComponent;
 import com.riotgames.interview.hongkong.matchmaking.skill.AbstractSkillCalculatorFactory;
 import com.riotgames.interview.hongkong.matchmaking.skill.BasicSkillCalculatorFactory;
 import com.riotgames.interview.hongkong.matchmaking.skill.SkillCalculator;
 
 /** 
- * MatchmakerFactory that creates a basic Matchmaker that uses:
+ * MatchmakerFactory that creates a basic Matchmaker featuring:
  * - SimpleSkillBasedMatcher that calculates similarities based solely on player skill
  * - BasicSkillCalculator for basic skill estimations based on win/loss ratio
  * 
