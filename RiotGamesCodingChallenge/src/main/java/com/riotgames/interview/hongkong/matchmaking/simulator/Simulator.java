@@ -53,7 +53,7 @@ public class Simulator {
 		Matchmaker matchmaker = new DefaultMatchmakerFactory().createMatchMaker();
 		Simulator simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);
 		simulator.execute(NUM_MATCHES, System.out, random);
-		
+				
 		// Create and simulate random matchmaker
 		matchmaker = new RandomMatchmakerFactory(random).createMatchMaker();
 		simulator = new Simulator(matchmaker, PLAYERS_PER_TEAM, PLAYER_BASE_SIZE);

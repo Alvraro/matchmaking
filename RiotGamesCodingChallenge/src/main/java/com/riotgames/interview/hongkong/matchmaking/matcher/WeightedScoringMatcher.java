@@ -64,13 +64,13 @@ public class WeightedScoringMatcher implements Matcher<PlayerComponent> {
 	}
 
 	/**
-	 * 1) Get normalized oldest matchmaking enter time for both players: 1 (oldest -> greatest score), 0 (newest -> lowest score)
+	 * 1) Get normalized oldest matchmaking time for both players: 1 (oldest -> greatest score), 0 (newest -> lowest score)
 	 * 2) Return average 
 	 */
 	private double getQueueScore(PlayerComponent one, PlayerComponent another) {
 		return 
-				0.5 * (1 - one.getNormalizedMatchmakingTime()) + 
-				0.5 * (1 - another.getNormalizedMatchmakingTime());
+				0.5 * one.getNormalizedMatchmakingTime() + 
+				0.5 * another.getNormalizedMatchmakingTime();
 	}
 
 	@Override
